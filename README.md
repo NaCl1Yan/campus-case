@@ -83,6 +83,8 @@ HarmonyOS NEXT 单机推理叙事 App：场景探索 → 线索收集 → 组合
 | 版本标记 | 可交付版本打语义化 tag：`v0.1.0`（M3 可玩）、`v1.0.0`（验收通过） |
 | 回滚 | 优先 `git revert <sha>`（保留历史）；禁止对已推送历史 `reset --hard` |
 
+> **网络提示**：本机 443 直连 GitHub 会被重置，仓库级已配置本地代理 `http.proxy = http://127.0.0.1:7890`（Clash）。push 失败先确认代理在跑；临时走直连可 `git -c http.proxy= push`。
+
 ### 2.5 提交前检查清单
 
 ```
