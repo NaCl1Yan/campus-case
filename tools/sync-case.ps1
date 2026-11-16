@@ -11,6 +11,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $src = Join-Path $root 'shared\case'
 $targets = @(
     (Join-Path $root 'harmony\entry\src\main\resources\rawfile\case'),
+    (Join-Path $root 'harmony\entry\src\ohosTest\resources\rawfile\case'),
     (Join-Path $root 'android\app\src\main\assets\case')
 )
 
