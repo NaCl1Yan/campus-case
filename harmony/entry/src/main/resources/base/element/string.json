@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "校园线索推理主模块"
+      "value": "钟楼七点主模块"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "校园线索推理"
+      "value": "钟楼七点"
     },
     {
       "name": "EntryAbility_label",
-      "value": "校园线索推理"
+      "value": "钟楼七点"
     }
   ]
 }
