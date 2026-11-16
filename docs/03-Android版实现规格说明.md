@@ -123,6 +123,7 @@ data class PlayerState(
     val ownedClues: List<String>,
     val flags: Map<String, Boolean>,
     val closedNodes: List<String>,
+    val appliedNodes: List<String>,
     val passedStages: List<String>,
     val finalChoice: String?,
     val endingId: String?,
