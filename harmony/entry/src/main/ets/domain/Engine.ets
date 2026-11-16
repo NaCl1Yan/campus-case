@@ -249,11 +249,26 @@ export class Engine {
     return state.flags.get('proofA') === true && state.flags.get('tapeFound') === true;
   }
 
+  /**
+   * 判断选项就绪：按证据链整体判定，而非只看单个 flag。
+   * proofB → 行动线（canPublic）；proofA → 动机线（canPrivate，含 tapeFound 这类链内事实）。
+   * 与 tools/validate.py、Engine.kt 的同名逻辑保持同构，请同步修改。
+   */
+  private static chainReady(state: PlayerState, flag: string): boolean {
+    if (flag === 'proofB') {
+      return Engine.canPublic(state);
+    }
+    if (flag === 'proofA') {
+      return Engine.canPrivate(state);
+    }
+    return state.flags.get(flag) === true;
+  }
+
   /** 判断选项可见性（灰显但仍展示原因，见 01 §FR-09）。 */
   static choiceAvailability(state: PlayerState, caseFile: CaseFile): Map<string, boolean> {
     const result = new Map<string, boolean>();
     caseFile.finalChoices.forEach((fc: FinalChoiceDef) => {
-      result.set(fc.id, state.flags.get(fc.requiresFlag) === true);
+      result.set(fc.id, Engine.chainReady(state, fc.requiresFlag));
     });
     return result;
   }
@@ -276,7 +291,7 @@ export class Engine {
       return new ApplyOutcome(false, state, Errs.CHAIN_NOT_READY);
     }
     const choice = caseFile.finalChoices.find((c: FinalChoiceDef) => c.id === choiceId);
-    if (choice === undefined || state.flags.get(choice.requiresFlag) !== true) {
+    if (choice === undefined || !Engine.chainReady(state, choice.requiresFlag)) {
       return new ApplyOutcome(false, state, Errs.FINAL_MISMATCH);
     }
     if (state.stage !== Stage.JUDGE || !Engine.canTransit(Stage.JUDGE, Stage.ENDING)) {
@@ -297,7 +312,7 @@ export class Engine {
     const picked = state.finalChoice;
     if (picked !== null) {
       const choice = caseFile.finalChoices.find((c: FinalChoiceDef) => c.id === picked);
-      if (choice !== undefined && state.flags.get(choice.requiresFlag) === true) {
+      if (choice !== undefined && Engine.chainReady(state, choice.requiresFlag)) {
         const ending = caseFile.endings.find((e: EndingDef) =>
           e.choiceId === picked && Engine.evalCondition(state, e.requires));
         if (ending !== undefined) {

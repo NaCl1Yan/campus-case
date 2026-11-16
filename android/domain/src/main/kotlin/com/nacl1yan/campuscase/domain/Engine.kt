@@ -117,9 +117,20 @@ object Engine {
     fun canPrivate(state: PlayerState): Boolean =
         state.flags["proofA"] == true && state.flags["tapeFound"] == true
 
+    /**
+     * 判断选项就绪：按证据链整体判定，而非只看单个 flag。
+     * proofB → 行动线（canPublic）；proofA → 动机线（canPrivate，含 tapeFound 这类链内事实）。
+     * 与 tools/validate.py 的 choice_chain_ready 完全同构，请同步修改。
+     */
+    private fun chainReady(state: PlayerState, flag: String): Boolean = when (flag) {
+        "proofB" -> canPublic(state)
+        "proofA" -> canPrivate(state)
+        else -> state.flags[flag] == true
+    }
+
     /** 最终判断选项的可见性（灰显但仍展示原因，见 01 §FR-09）。 */
     fun choiceAvailability(state: PlayerState, case: CaseFile): List<Pair<FinalChoice, Boolean>> =
-        case.finalChoices.map { it to (state.flags[it.requiresFlag] == true) }
+        case.finalChoices.map { it to chainReady(state, it.requiresFlag) }
 
     fun enterJudge(state: PlayerState): ApplyOutcome {
         if (!canPublic(state) && !canPrivate(state)) {
@@ -138,7 +149,7 @@ object Engine {
         }
         val allowed = case.finalChoices.firstOrNull { it.id == choiceId }
             ?: return ApplyOutcome(false, state, Errs.FINAL_MISMATCH)
-        if (state.flags[allowed.requiresFlag] != true) {
+        if (!chainReady(state, allowed.requiresFlag)) {
             return ApplyOutcome(false, state, Errs.FINAL_MISMATCH)
         }
         if (state.stage != Stage.JUDGE || !canTransit(Stage.JUDGE, Stage.ENDING)) {
@@ -155,7 +166,7 @@ object Engine {
         var endingId: String? = null
         if (picked != null) {
             val choice = case.finalChoices.firstOrNull { it.id == picked }
-            if (choice != null && state.flags[choice.requiresFlag] == true) {
+            if (choice != null && chainReady(state, choice.requiresFlag)) {
                 endingId = case.endings
                     .firstOrNull { it.choiceId == picked && evalCondition(state, it.requires) }
                     ?.id

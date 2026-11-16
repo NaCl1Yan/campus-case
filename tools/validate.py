@@ -199,10 +199,23 @@ def chain_ready(state: dict[str, Any], flag: str) -> bool:
     return state["flags"].get(flag) is True
 
 
+def choice_chain_ready(state: dict[str, Any], flag: str) -> bool:
+    """判断选项是否就绪：按证据链整体判定，而非只看单个 flag。
+
+    proofB → 行动线就绪（canPublic）
+    proofA → 动机线就绪（canPrivate，含 tapeFound 这类链内事实）
+    """
+    if flag == "proofB":
+        return can_public(state)
+    if flag == "proofA":
+        return can_private(state)
+    return state["flags"].get(flag) is True
+
+
 def choice_allowed(state: dict[str, Any], case: dict[str, Any], choice_id: str) -> bool:
     for fc in case["finalChoices"]:
         if fc["id"] == choice_id:
-            return chain_ready(state, fc["requiresFlag"])
+            return choice_chain_ready(state, fc["requiresFlag"])
     return False
 
 
