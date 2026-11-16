@@ -264,7 +264,7 @@ def check_kotlin_symbols() -> None:
 
 
 EXPORT_RE = re.compile(
-    r"export\s+(?:interface|class|enum|function|type|const|let)\s+([A-Za-z_][A-Za-z0-9_]*)"
+    r"export\s+(?:interface|class|enum|function|type|const|let|struct)\s+([A-Za-z_][A-Za-z0-9_]*)"
 )
 
 
