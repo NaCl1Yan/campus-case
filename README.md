@@ -1,6 +1,8 @@
 # 校园线索推理与多结局探索 App（`campus-case`）
 
-鸿蒙 + Android **双端同构**的单机推理叙事 App：场景探索 → 线索收集 → 组合验证 → 最终判断 → 多结局，带线索板、HUD、阶段进度、存档与杀进程恢复。
+HarmonyOS 单机推理叙事 App《钟楼七点》：场景探索 → 线索收集 → 组合验证 → 最终判断 → 多结局，带线索板、HUD、阶段进度、存档与杀进程恢复。
+
+> **当前状态**：鸿蒙版**完整可玩**（模拟器实测全链路 + 存档 + 恢复）。Android 版**冻结**，保留代码与规格但不再推进。
 
 - 平台 A：HarmonyOS NEXT — ArkTS + ArkUI（API 12+），单 HAP，纯离线
 - 平台 B：Android 8.0+ — Kotlin + Jetpack Compose，单 Activity，纯离线
@@ -18,7 +20,8 @@
 | [01-基础功能需求规格说明](docs/01-基础功能需求规格说明.md) | 软件基础功能 FR-01～FR-17、通用规则、验收标准、测试要求（**平台无关**） | v1.2 定稿 |
 | [02-内容与剧情设计规范](docs/02-内容与剧情设计规范.md) | 内容 schema、规模约束、校验规则 | v0.1 骨架，正文待定 |
 | [03-Android版实现规格说明](docs/03-Android版实现规格说明.md) | FR → Android 落地映射、状态/存储/动画/恢复对照、双端一致性策略 | v1.0 |
-| [04-首轮编译绿检查单](docs/04-首轮编译绿检查单.md) | 在 IDE 里跑通两端编译与单测的步骤、期望输出、报错对照表 | v1.0 |
+| [04-首轮编译绿检查单](docs/04-首轮编译绿检查单.md) | 编译与单测的步骤、期望输出、报错对照表 | v1.1 |
+| [05-作业演示与验收对照](docs/05-作业演示与验收对照.md) | 十分钟演示脚本、需求→实现→证据对照、分支真实性演示、已知限制 | v1.0 |
 | [drafts/剧情草案-v0](docs/drafts/剧情草案-v0.md) | 早期含具体剧情的混写版，仅作素材保留 | 草案，不采用 |
 
 **阅读顺序**：先看 01 的「§3 通用规则」和「§4 功能需求」，那是所有实现的判定依据；再看 03 的对照表了解各平台怎么落地；02 只定内容长什么样，具体剧情后续单独写。
@@ -141,46 +144,48 @@ campus-case/
 
 ## 4. 当前进度
 
-| 阶段 | 鸿蒙版 | Android 版 |
+| 阶段 | 鸿蒙版（交付对象） | Android 版（冻结） |
 | --- | --- | --- |
-| 需求文档（基础功能，FR-01～17） | ✅ v1.4 | ✅ 沿用同一套（03 文档为映射） |
-| 内容设计（schema + 占位案件 + 42 条用例） | ✅ 已落地 `shared/` | ✅ 同一份，不复制 |
-| `domain/` 判定引擎 | ✅ 真编译通过（hvigor 5.17.5 / SDK 5.0.5(17)，main + ohosTest）；执行待设备 | ✅ kotlinc 2.1 实编译 + JUnit5：16/16 通过 |
-| 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
-| UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
-| 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
-| 双端一致性（fixtures 双向校验） | ✅ 42 条用例生成为强类型断言，8 组 Hypium（待 DevEco 执行） | ✅ fixture runner 已随单测跑通 |
+| 需求文档（FR-01～17） | ✅ v1.5 | ✅ 沿用同一套 |
+| 内容（4 场景 / 12 节点 / 6 线索 / 2 结局） | ✅ 《钟楼七点》真实文案 | ✅ 同一份，不复制 |
+| `domain/` 判定引擎 | ✅ 真编译 + 42 条 fixtures | ✅ kotlinc 实编译 16/16 |
+| 引擎与测试模块编译 | ✅ `tools/build-harmony.ps1` → PASS | ⬜ 无 Android SDK |
+| UI（8 个视图 + HUD） | ✅ 单页路由 + 全部页面 | ⬜ 冻结 |
+| Preferences + RDB（五表） | ✅ 快照 + 事实层 + 自动/手动存档 | ⬜ 冻结 |
+| 冷启动恢复（杀进程） | ✅ 实测停在「已完结 100%」 | ⬜ 冻结 |
+| 动画（6 类） | ✅ 转场/进度环/获得/抖动/阶段/打字机 | ⬜ 冻结 |
+| Hypium 用例「执行」 | ⚠️ 需在 DevEco 里点 Run（CLI 下 Hypium 不推进，见 04 文档） | — |
 
-## 5. 如何验证（M2 现状）
+**现在的样子**：
+
+| 简报 | 线索板 | 结局 |
+| --- | --- | --- |
+| ![简报](docs/screenshots/01-brief.jpeg) | ![线索板](docs/screenshots/02-clueboard.jpeg) | ![结局](docs/screenshots/03-ending.jpeg) |
+
+## 5. 如何验证
 
 ```powershell
-# 0) 无 IDE 跑 Kotlin 领域单测（自动下载编译器 + JUnit，本机已实测 16/16 PASS）
-powershell -File tools/run-kotlin-tests.ps1
+# 1) 离线预检（配置/资源/符号/导入/生成物一致性，只需 Python）
+python tools/preflight.py                 # 期望：PASS 10 / FAIL 0
 
-# 1) 离线预检：配置/资源/符号/导入/生成物一致性（只需 Python）
-python tools/preflight.py            # 期望：PASS 10 / FAIL 0
+# 2) 内容校验 + 规格自检（42 条判定用例）
+python tools/validate.py                  # 期望：内容通过 + 42/42
 
-# 2) 内容校验 + 规格自检（只需 Python）
-python tools/validate.py            # 期望：内容通过 + 42/42 用例通过
+# 3) 鸿蒙工程编译（主模块 + 测试模块）
+powershell -File tools/build-harmony.ps1  # 期望：RESULT: PASS
 
-# 3) 把 fixtures 生成为鸿蒙侧强类型用例（改了 shared/fixtures 才需要重跑）
-python tools/gen_fixtures_ets.py
+# 4) Kotlin 侧领域单测（双端一致性的另一半证据）
+powershell -File tools/run-kotlin-tests.ps1  # 期望：16/16
 
-# 4) Android 引擎单测（有 Gradle / Android Studio 时；与本机脚本跑同一批用例）
-cd android; ./gradlew :domain:test
-
-# 5) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
-cd harmony; hvigorw test
+# 5) 装到模拟器并驱动点击（开发期自动化，可选）
+powershell -File tools/sync-case.ps1
+powershell -File tools/ui-tap.ps1 -Text "接下这桩案子"
+powershell -File tools/ui-tap.ps1 -Dump
 ```
 
-> **中文路径限制**：hvigor 拒绝含中文的工程路径。本仓库在 `E:\校园推理galgame`，所以命令行构建请用
-> `powershell -File tools/build-harmony.ps1`（镜像到 `%LOCALAPPDATA%\campus-case-build` 后构建，已实测 PASS）。
-> 想在 DevEco 里直接跑，建议把仓库移到纯英文路径。
+> **中文路径限制**：hvigor 拒绝含中文的工程路径，`build-harmony.ps1` 会镜像到 `%LOCALAPPDATA%\campus-case-build` 再构建。
 
-首次在 IDE 里跑编译的完整步骤、期望输出与报错对照表见 [首轮编译绿检查单](docs/04-首轮编译绿检查单.md)。
-
-`tools/validate.py` 是开发期参照实现：它跑通只代表"用例与 01 §5.3 语义一致"，**不代表两端代码已跑**。两端要各自跑通同一批 fixtures 才算 AC-18 成立。
-
+演示与验收对照见 [05-作业演示与验收对照](docs/05-作业演示与验收对照.md)。
 ## 6. 工程骨架（M1）
 
 ### 6.1 内容同步（两端共用一份）
