@@ -1,23 +1,15 @@
 import { describe, it, expect } from '@ohos/hypium';
-import { abilityDelegatorRegistry } from '@kit.TestKit';
-import util from '@ohos.util';
 import {
   CaseFile, LogEntry, NodeState, PlayerState, Stage, Errs, ApplyOutcome,
 } from '../../../main/ets/domain/Types';
 import { Engine } from '../../../main/ets/domain/Engine';
 import { CaseLoader } from '../../../main/ets/domain/CaseLoader';
+import { loadCase } from './TestSupport';
 
 /**
  * 鸿蒙侧引擎用例（TC 编号对应 docs/01 §10.2），与 android/domain 的 EngineTest.kt 一一对应。
- * 用例数据来自 shared/case（构建期复制到 rawfile/case）。
+ * 用例数据来自 shared/case（构建期复制到 rawfile/case）；读取与断言工具见 TestSupport.ets。
  */
-function loadCase(): CaseFile {
-  const context = abilityDelegatorRegistry.getAbilityDelegator().getAppContext();
-  const bytes: Uint8Array = context.resourceManager.getRawFileContentSync('case/campus_001.json');
-  const decoder = util.TextDecoder.create('utf-8', { ignoreBOM: true });
-  return CaseLoader.parse(decoder.decodeToString(bytes));
-}
-
 function flagsTrue(...keys: string[]): Map<string, boolean> {
   const m = new Map<string, boolean>();
   keys.forEach((k: string) => m.set(k, true));
