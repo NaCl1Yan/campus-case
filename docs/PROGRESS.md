@@ -1,0 +1,100 @@
+# 进度与明日待办
+## 《钟楼七点》鸿蒙版 · 2026-11-16 收工快照
+
+> 收工时间：2026-11-17 00:10（Asia/Shanghai）
+> 分支：`main`，与 `origin/main` 同步；里程碑 tag：`v0.9.0-playable`
+
+---
+
+## 1. 今天做完了什么
+
+| 模块 | 状态 | 证据 |
+| --- | --- | --- |
+| 真实剧情内容《钟楼七点》 | ✅ 4 场景 / 12 节点 / 6 线索 / 3 规则 / 2 关卡 / 2 结局 | `shared/case/campus_001.json`；`tools/validate.py` 42/42 |
+| 判定引擎（ArkTS） | ✅ 门控/效果/连线/结局/进度/回放，纯函数 | `entry/src/main/ets/domain/`；编译通过 |
+| 持久化 | ✅ Preferences（快照/设置）+ RDB 五表 + `t_ending_seen` | `entry/src/main/ets/store/` |
+| 界面 | ✅ 简报 / 地图 / 场景 / 线索板 / 推理 / 判断 / 结局 / 存档 / 收集册 / 设置 | `entry/src/main/ets/view/` + `pages/Index.ets` |
+| HUD 与动画 | ✅ 阶段、目标、线索、双链、进度环、6 类动画 | `view/HudBar.ets` 等 |
+| 冷启动恢复 | ✅ 自动槽 → 快照 → 流水回放；杀进程实测停在「已完结 100%」 | `store/GameController.ets::restore` |
+| 演示流水线 | ✅ 三条链路 24 项断言全部通过 | `tools/e2e.ps1`；截图 `docs/screenshots/e2e-*.jpeg` |
+| 文档 | ✅ 需求 / 内容 / Android（冻结）/ 编译检查单 / 演示对照 / 测试报告 | `docs/` |
+
+**最近的关键提交**
+
+```
+ffc2557 test(e2e): 三条演示链路脚本化并实测通过（24 项断言）
+a0ee2d7 feat(tools): 演示流水线脚本 e2e.ps1
+f6c3039 feat(harmony): 删除存档二次确认、场景氛围色、内容校验结果可见
+9e9b42b feat(harmony): 结局收集册、设置页、返回键拦截、线索板结论区
+669260f feat(harmony): 完整可玩版本（真实剧情 + 七页 UI + Preferences/RDB + 冷启动恢复）
+```
+
+---
+
+## 2. 明天接着做（按优先级）
+
+| # | 事项 | 为什么 | 预计 |
+| --- | --- | --- | --- |
+| 1 | **在 DevEco 里跑一次 Hypium**：右键 `entry/src/ohosTest/ets/test` → Run 'Tests in test' | 22 个用例是作业「单元测试」项的唯一缺口（命令行下 Hypium 不推进，原因见 `docs/04`） | 2 分钟 |
+| 2 | 线索板 Canvas 连线：把「已连」标记换/加成真实曲线 | 视觉说服力，评委一眼能看出是线索板而非列表 | 1–2 小时 |
+| 3 | 字号缩放三档（1.0/1.2/1.5） | FR-15 里唯一没做的设置项 | 2 小时 |
+| 4 | 录一段 3 分钟演示或导出 GIF 放 `docs/` | 交作业/答辩时不用现场点 | 半小时 |
+| 5 | （可选）把 `docs/04` 里"执行需 IDE"的结论改成实测结果 | 文档与事实一致 | 10 分钟 |
+
+---
+
+## 3. 明天开工只需要三条命令
+
+```powershell
+# 1) 看当前状态（应显示 working tree clean）
+git status --short --branch
+
+# 2) 确认环境没坏（模拟器在线时再跑 e2e）
+python tools/preflight.py
+python tools/validate.py
+
+# 3) 编译（改代码后必跑）
+powershell -File tools/build-harmony.ps1
+```
+
+模拟器如果又掉线：DevEco → **Device Manager** 启动 `Huawei_Phone`，然后
+
+```powershell
+& 'D:\huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe' tconn 127.0.0.1:5555
+```
+
+装包与启动（未签名 HAP 可以直接装）：
+
+```powershell
+$hdc = 'D:\huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
+$hap = "$env:LOCALAPPDATA\campus-case-build\harmony\entry\build\default\outputs\default\entry-default-unsigned.hap"
+& $hdc install -r $hap
+& $hdc shell aa start -a EntryAbility -b com.nacl1yan.campuscase
+```
+
+---
+
+## 4. 今天踩过的坑（明天不用重复踩）
+
+| 坑 | 结论 |
+| --- | --- |
+| hvigor 拒绝中文路径 | 必须走 `tools/build-harmony.ps1` 镜像到 `%LOCALAPPDATA%\campus-case-build` |
+| ArkUI `ForEach` 同 key 不重建 | key 里必须并入状态字段，否则列表状态不刷新 |
+| API 12 的 `animateTo`/`AlertDialog` | 走 `this.getUIContext().animateTo / showAlertDialog` |
+| 流水回放还原不了 JUDGE/ENDING | 恢复顺序：自动槽 → Preferences 快照 → 回放 |
+| `uitest` 点击无反应 | 先确认 `hdc list targets` 非空；坐标要用 dumpLayout 的 bounds 中心 |
+| 编辑 PS1 后中文乱码 | 脚本要存 UTF-8 **带 BOM**（5.1 按 GBK 解析会报错） |
+
+---
+
+## 5. 仓库速查
+
+```
+docs/            01 需求 / 02 内容 / 03 Android(冻结) / 04 编译检查单 / 05 演示对照 / TestReport
+shared/case/     唯一内容源（两端共用）
+shared/fixtures/ 42 条判定用例（Kotlin + ArkTS 各自跑）
+harmony/         DevEco 工程（交付对象）
+android/         Gradle 工程（冻结，仅保留）
+tools/           preflight / validate / gen_fixtures_ets / sync-case / build-harmony /
+                 run-kotlin-tests / ui-tap / e2e / make-icons
+```
