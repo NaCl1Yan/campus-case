@@ -3,7 +3,7 @@ import { common } from '@kit.AbilityKit';
 import { CaseFile, CombineOutcome, Effect, LogEntry, PlayerState, Stage, ApplyOutcome, EndingOutcome } from '../domain/Types';
 import { CaseLoader } from '../domain/CaseLoader';
 import { Engine } from '../domain/Engine';
-import { CaseDb, LogRow, SlotInfo } from './CaseDb';
+import { CaseDb, EndingRow, LogRow, SlotInfo } from './CaseDb';
 import { Prefs } from './Prefs';
 import { Snapshot } from './Snapshot';
 
@@ -20,6 +20,9 @@ export class GameController {
 
   private contentVersion: number = 1;
 
+  /** 设置（01 §FR-15）：当前只做「动画减弱」，其余项留给后续。 */
+  reduceMotion: boolean = false;
+
   // ---------------------------------------------------------------- 初始化与恢复
 
   async init(context: common.UIAbilityContext): Promise<void> {
@@ -32,7 +35,18 @@ export class GameController {
     this.contentVersion = this.caseFile.contentVersion;
     await Prefs.putNumber(Prefs.KEY_CONTENT_VERSION, this.contentVersion);
 
+    this.reduceMotion = await Prefs.getBoolean(Prefs.KEY_REDUCE_MOTION, false);
     await this.restore();
+  }
+
+  async setReduceMotion(value: boolean): Promise<void> {
+    this.reduceMotion = value;
+    await Prefs.putBoolean(Prefs.KEY_REDUCE_MOTION, value);
+  }
+
+  /** 收集册：全部结局 + 是否已解锁。 */
+  async collectibleEndings(): Promise<EndingRow[]> {
+    return await CaseDb.listEndings();
   }
 
   /** 冷启动恢复（01 §FR-14）：快照与流水对账，不一致以流水回放为准。 */
@@ -222,6 +236,11 @@ export class GameController {
       return result;
     }
     const swapped = await this.persistThenSwap(result.state, 'finish', null, result);
+    if (swapped.ok && swapped.state.endingId !== null) {
+      const found = this.requireCase().endings.find((e) => e.id === swapped.state.endingId);
+      await CaseDb.markEnding(swapped.state.endingId, found === undefined ? '未知结局' : found.name,
+        swapped.state.playMs);
+    }
     await this.autoSave();
     return swapped;
   }

@@ -28,6 +28,7 @@ export struct ClueBoardView {
   @Prop chainAText: string = '';
   @Prop canDeduce: boolean = false;
   @Prop links: string[] = [];
+  @Prop conclusions: string[] = [];
   @State selected: string[] = [];
   @State shakeOffset: number = 0;
   @State message: string = '';
@@ -87,6 +88,26 @@ export struct ClueBoardView {
       Text(this.message.length > 0 ? this.message : '选两张线索，点「连线」验证它们之间有没有关系。')
         .fontSize(12)
         .fontColor(this.message.length > 0 ? '#B3261E' : '#9CA3AF')
+
+      if (this.conclusions.length > 0) {
+        Column({ space: 4 }) {
+          Text('已成立的结论')
+            .fontSize(12)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#2E7D32')
+          ForEach(this.conclusions, (text: string, index: number) => {
+            Text(`${index + 1}. ${text}`)
+              .fontSize(11)
+              .lineHeight(18)
+              .fontColor('#374151')
+          }, (text: string, index: number) => `${index}:${text}`)
+        }
+        .width('100%')
+        .padding(10)
+        .backgroundColor('#F1F8F2')
+        .borderRadius(10)
+        .alignItems(HorizontalAlign.Start)
+      }
 
       Grid() {
         ForEach(this.cards, (card: ClueCardData) => {

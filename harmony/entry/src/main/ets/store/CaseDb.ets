@@ -34,8 +34,21 @@ export class SlotInfo {
   }
 }
 
+/** 收集册一行。 */
+export class EndingRow {
+  endingId: string;
+  name: string;
+  firstSeen: number;
+
+  constructor(endingId: string, name: string, firstSeen: number) {
+    this.endingId = endingId;
+    this.name = name;
+    this.firstSeen = firstSeen;
+  }
+}
+
 /**
- * 结构化持久化（01 §8.3 五张表）。
+ * 结构化持久化（01 §8.3 五张表 + 收集册）。
  * 角色：事实层（可查询、可回放、可对账）；Preferences 只做加速。
  */
 export class CaseDb {
@@ -56,6 +69,8 @@ export class CaseDb {
        seq INTEGER PRIMARY KEY AUTOINCREMENT, case_id TEXT NOT NULL, node_id TEXT NOT NULL,
        choice_id TEXT, stage_after TEXT NOT NULL, created_at INTEGER NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS idx_log_case_seq ON t_event_log(case_id, seq)`,
+    `CREATE TABLE IF NOT EXISTS t_ending_seen (
+       ending_id TEXT PRIMARY KEY, name TEXT NOT NULL, first_seen INTEGER NOT NULL, play_ms INTEGER NOT NULL DEFAULT 0)`,
     `CREATE TABLE IF NOT EXISTS t_save_slot (
        slot_id INTEGER PRIMARY KEY, slot_name TEXT NOT NULL, case_id TEXT NOT NULL,
        payload TEXT NOT NULL, seq INTEGER NOT NULL, created_at INTEGER NOT NULL)`,
@@ -205,6 +220,31 @@ export class CaseDb {
     await store.executeSql('DELETE FROM t_flag WHERE case_id = ?', [caseId]);
     await store.executeSql('DELETE FROM t_event_log WHERE case_id = ?', [caseId]);
     await store.executeSql('DELETE FROM t_case WHERE case_id = ?', [caseId]);
+  }
+
+  // ---------------------------------------------------------------- 收集册
+
+  /** 结局登记：同结局重复达成只记首次（01 §FR-10 规则 5）。 */
+  static async markEnding(endingId: string, name: string, playMs: number): Promise<void> {
+    await CaseDb.need().executeSql(
+      'INSERT OR IGNORE INTO t_ending_seen (ending_id, name, first_seen, play_ms) VALUES (?, ?, ?, ?)',
+      [endingId, name, Date.now(), playMs],
+    );
+  }
+
+  static async listEndings(): Promise<EndingRow[]> {
+    const rs = await CaseDb.need().querySql(
+      'SELECT ending_id, name, first_seen FROM t_ending_seen ORDER BY first_seen ASC', []);
+    const rows: EndingRow[] = [];
+    while (rs.goToNextRow()) {
+      rows.push(new EndingRow(
+        rs.getString(rs.getColumnIndex('ending_id')),
+        rs.getString(rs.getColumnIndex('name')),
+        rs.getLong(rs.getColumnIndex('first_seen')),
+      ));
+    }
+    rs.close();
+    return rows;
   }
 
   // ---------------------------------------------------------------- 存档槽

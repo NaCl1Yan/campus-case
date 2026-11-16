@@ -20,6 +20,10 @@ export struct HudBar {
   };
   onSlots: () => void = () => {
   };
+  onGallery: () => void = () => {
+  };
+  onSettings: () => void = () => {
+  };
   onRestart: () => void = () => {
   };
 
@@ -95,6 +99,18 @@ export struct HudBar {
             .borderRadius(10)
         }
         Blank()
+        Button('收集册')
+          .fontSize(13)
+          .height(30)
+          .backgroundColor('#00000000')
+          .fontColor('#26324A')
+          .onClick(() => this.onGallery())
+        Button('设置')
+          .fontSize(13)
+          .height(30)
+          .backgroundColor('#00000000')
+          .fontColor('#26324A')
+          .onClick(() => this.onSettings())
         Button('重来')
           .fontSize(13)
           .height(30)

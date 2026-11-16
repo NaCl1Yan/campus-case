@@ -12,6 +12,9 @@ import { DeduceView, ProveCard } from '../view/DeduceView';
 import { JudgeOption, JudgeView } from '../view/JudgeView';
 import { EndingView } from '../view/EndingView';
 import { SlotRow, SlotsView } from '../view/SlotsView';
+import { GalleryRow, GalleryView } from '../view/GalleryView';
+import { SettingsView } from '../view/SettingsView';
+import { EndingRow } from '../store/CaseDb';
 
 /**
  * 单页应用 + 视图切换（01 §8.1 页面清单的落地）。
@@ -36,6 +39,9 @@ struct Index {
   @State readyChip: boolean = false;
   @State savedText: string = '';
   @State slotRows: SlotRow[] = [];
+  @State galleryRows: GalleryRow[] = [];
+  @State reduceMotion: boolean = false;
+  @State contentVersion: number = 1;
   @State transitionFlag: boolean = false;
 
   private controller: GameController = GameController.I;
@@ -57,6 +63,8 @@ struct Index {
       const context = getContext(this) as common.UIAbilityContext;
       await this.controller.init(context);
       this.ready = true;
+      this.reduceMotion = this.controller.reduceMotion;
+      this.contentVersion = this.caseFile().contentVersion;
       this.refresh();
       if (this.mirror.stage === Stage.FINISHED) {
         this.view = 'ending';
@@ -114,7 +122,8 @@ struct Index {
       this.transitionFlag = false;
     });
     this.view = view;
-    this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
+    const dur = this.controller.reduceMotion ? 0 : 220;
+    this.getUIContext().animateTo({ duration: dur, curve: Curve.EaseOut }, () => {
       this.transitionFlag = true;
     });
   }
@@ -183,6 +192,36 @@ struct Index {
       p.id, p.question, Engine.canPublic(state) || Engine.canPrivate(state) ? '证据链已成立' : '还差一步',
       state.passedStages.includes(p.id), p.hints ?? [], state.ownedClues.slice().sort()
     ));
+  }
+
+  /** 已成立的规则结论（线索板用文字把推理链讲清楚）。 */
+  private conclusions(): string[] {
+    const state = this.mirror;
+    const list: string[] = [];
+    this.caseFile().rules.forEach((rule) => {
+      if (state.flags.get(rule.grantsFlag) === true) {
+        list.push(rule.conclusion);
+      }
+    });
+    return list;
+  }
+
+  private async reloadGallery(): Promise<void> {
+    const seen: EndingRow[] = await this.controller.collectibleEndings();
+    const rows: GalleryRow[] = this.caseFile().endings.map((ending) => {
+      const hit = seen.find((s) => s.endingId === ending.id);
+      if (hit === undefined) {
+        const need = this.caseFile().chains
+          .filter((c) => ending.requires.allFlags !== undefined && ending.requires.allFlags.includes(c.passFlagId))
+          .map((c) => c.name);
+        return new GalleryRow(ending.id, ending.name, false,
+          `需要证据链：${need.length > 0 ? need.join('、') : '未知'} → 查看结局条件`);
+      }
+      const when = new Date(hit.firstSeen);
+      return new GalleryRow(ending.id, ending.name, true,
+        `解锁于 ${when.getMonth() + 1}/${when.getDate()} ${when.getHours().toString().padStart(2, '0')}:${when.getMinutes().toString().padStart(2, '0')}`);
+    });
+    this.galleryRows = rows;
   }
 
   private clueIds(): string[] {
@@ -385,6 +424,11 @@ struct Index {
     });
   }
 
+  private async openGallery(): Promise<void> {
+    await this.reloadGallery();
+    this.nav('gallery');
+  }
+
   private async openSlots(): Promise<void> {
     await this.reloadSlots();
     this.nav('slots');
@@ -416,6 +460,15 @@ struct Index {
 
   // ---------------------------------------------------------------- UI
 
+  /** 返回键：结局/设置/收集册/存档一律先回主页，避免误退出（01 §FR-10）。 */
+  onBackPress(): boolean {
+    if (this.view === 'hub' || this.view === 'brief') {
+      return false;
+    }
+    this.nav(this.view === 'ending' ? 'hub' : 'hub');
+    return true;
+  }
+
   build() {
     Column() {
       if (!this.ready) {
@@ -443,6 +496,10 @@ struct Index {
           onSlots: () => {
             this.openSlots();
           },
+          onGallery: () => {
+            this.openGallery();
+          },
+          onSettings: () => this.nav('settings'),
           onRestart: () => this.askRestart(),
         })
 
@@ -487,6 +544,7 @@ struct Index {
               chainAText: this.chainAText,
               canDeduce: this.mirror.stage === Stage.DEDUCE || this.readyChip,
               links: [],
+              conclusions: this.conclusions(),
               onLink: (a: string, b: string) => {
                 this.linkClues(a, b);
               },
@@ -519,6 +577,19 @@ struct Index {
               onHome: () => {
                 this.restartGame();
               },
+            })
+          } else if (this.view === 'gallery') {
+            GalleryView({ rows: this.galleryRows })
+          } else if (this.view === 'settings') {
+            SettingsView({
+              reduceMotion: this.reduceMotion,
+              contentVersion: this.contentVersion,
+              restoredFrom: this.controller.restoredFrom,
+              onToggleReduceMotion: (value: boolean) => {
+                this.controller.setReduceMotion(value);
+                this.reduceMotion = value;
+              },
+              onClearProgress: () => this.askRestart(),
             })
           } else if (this.view === 'slots') {
             SlotsView({
@@ -558,14 +629,15 @@ struct Index {
             .backgroundColor('#EEF2F7')
             .fontColor('#26324A')
             .onClick(() => this.nav('deduce'))
-          Button(this.readyChip ? '去判断' : '判断')
+          Button(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '去判断' : '判断')
             .layoutWeight(1)
             .height(44)
             .fontSize(14)
-            .backgroundColor(this.readyChip ? '#B3261E' : '#E5E7EB')
-            .fontColor(this.readyChip ? '#FFFFFF' : '#9CA3AF')
+            .backgroundColor(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '#B3261E' : '#E5E7EB')
+            .fontColor(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '#FFFFFF' : '#9CA3AF')
+            .enabled(this.readyChip && this.mirror.stage !== Stage.FINISHED)
             .onClick(() => {
-              if (this.readyChip) {
+              if (this.readyChip && this.mirror.stage !== Stage.FINISHED) {
                 this.openJudge();
               } else {
                 this.showToast('证据链还没成立，先去把线索连起来');
