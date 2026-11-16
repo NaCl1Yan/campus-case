@@ -1,0 +1,47 @@
+# ---- DevEco Studio / HarmonyOS 构建产物 ----
+build/
+.hvigor/
+.hvigor-cache/
+.gradle/
+.preview/
+.release/
+*.hap
+*.hsp
+*.har
+*.app
+*.abc
+*.appxsym
+*.pdb
+.ark_tmp/
+.cxx/
+
+# ---- 依赖 ----
+oh_modules/
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# ---- 本地配置与签名（绝不入库）----
+local.properties
+*.p12
+*.cer
+*.p7b
+*.keystore
+*.jks
+signature/
+key.properties
+
+# ---- IDE / 系统 ----
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# ---- 临时草稿（允许存在但不入库）----
+scratch/
+tmp/
+*.tmp
+~$*
