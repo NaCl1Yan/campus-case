@@ -1,0 +1,49 @@
+{
+  "kind": "gate",
+  "case": "campus_001",
+  "note": "节点可见性：门控求值顺序 closed → 场景解锁 → 条件",
+  "cases": [
+    {
+      "id": "gate-01-missing-flag",
+      "desc": "未接案时 N02 不可用",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"] }, "nodeId": "N02" },
+      "expect": { "available": false }
+    },
+    {
+      "id": "gate-02-accepted",
+      "desc": "接案后 N02 可用",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"], "flags": { "accepted": true } }, "nodeId": "N02" },
+      "expect": { "available": true }
+    },
+    {
+      "id": "gate-03-closed-by-choice",
+      "desc": "撬锁后 N05 永久关闭（即使条件已满足）",
+      "given": {
+        "state": {
+          "stage": "EXPLORE",
+          "unlockedScenes": ["S1", "S2", "S3"],
+          "ownedClues": ["C2"],
+          "flags": { "breached": true },
+          "closedNodes": ["N05"]
+        },
+        "nodeId": "N05"
+      },
+      "expect": { "available": false }
+    },
+    {
+      "id": "gate-04-closed-wins-over-condition",
+      "desc": "closedNodes 优先于所有条件：N03 已关闭且前置满足仍为 false",
+      "given": {
+        "state": { "stage": "EXPLORE", "unlockedScenes": ["S1", "S2"], "ownedClues": ["C2"], "closedNodes": ["N03"] },
+        "nodeId": "N03"
+      },
+      "expect": { "available": false }
+    },
+    {
+      "id": "gate-05-scene-locked",
+      "desc": "场景未解锁时节点不可用",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"], "ownedClues": ["C2"] }, "nodeId": "N03" },
+      "expect": { "available": false }
+    }
+  ]
+}

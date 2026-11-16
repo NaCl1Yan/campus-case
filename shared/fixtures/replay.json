@@ -1,0 +1,65 @@
+{
+  "kind": "replay",
+  "case": "campus_001",
+  "note": "事件流水回放：不走门控，按 seq 折叠效果；重复 seq 幂等（TC-24 / TC-25）",
+  "cases": [
+    {
+      "id": "replay-01-three-nodes",
+      "desc": "N01 → N02 → N03 折叠出线索与解锁",
+      "given": {
+        "log": [
+          { "seq": 1, "nodeId": "N01" },
+          { "seq": 2, "nodeId": "N02" },
+          { "seq": 3, "nodeId": "N03" }
+        ]
+      },
+      "expect": {
+        "state": {
+          "stage": "EXPLORE",
+          "ownedClues": ["C1", "C2"],
+          "unlockedScenes": ["S1", "S2", "S3"],
+          "appliedNodes": ["N01", "N02", "N03"],
+          "flags": { "accepted": true, "ledgerChecked": true, "registered": true },
+          "seq": 3
+        }
+      }
+    },
+    {
+      "id": "replay-02-duplicate-seq-idempotent",
+      "desc": "同一 seq 重复出现只生效一次",
+      "given": {
+        "log": [
+          { "seq": 1, "nodeId": "N01" },
+          { "seq": 1, "nodeId": "N01" },
+          { "seq": 2, "nodeId": "N02" }
+        ]
+      },
+      "expect": {
+        "state": {
+          "ownedClues": ["C2"],
+          "appliedNodes": ["N01", "N02"],
+          "seq": 2
+        }
+      }
+    },
+    {
+      "id": "replay-03-breach-path",
+      "desc": "撬锁路径回放：N03 与 N05 处于关闭态",
+      "given": {
+        "log": [
+          { "seq": 1, "nodeId": "N01" },
+          { "seq": 2, "nodeId": "N02" },
+          { "seq": 3, "nodeId": "N04" }
+        ]
+      },
+      "expect": {
+        "state": {
+          "ownedClues": ["C1", "C2"],
+          "closedNodes": ["N03", "N05"],
+          "flags": { "accepted": true, "ledgerChecked": true, "breached": true },
+          "seq": 3
+        }
+      }
+    }
+  ]
+}

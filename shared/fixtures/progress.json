@@ -1,0 +1,36 @@
+{
+  "kind": "progress",
+  "case": "campus_001",
+  "note": "进度：阶段基值 + 线索持有率 / 关卡通过数，越界钳制",
+  "cases": [
+    { "id": "progress-01-prologue", "desc": "未开始", "given": { "state": { "stage": "PROLOGUE" } }, "expect": { "progress": 0 } },
+    { "id": "progress-02-explore-empty", "desc": "勘探但无线索", "given": { "state": { "stage": "EXPLORE" } }, "expect": { "progress": 10 } },
+    {
+      "id": "progress-03-explore-half",
+      "desc": "勘探 3/6 线索 → 10 + 45×0.5",
+      "given": { "state": { "stage": "EXPLORE", "ownedClues": ["C1", "C2", "C3"] } },
+      "expect": { "progress": 32.5 }
+    },
+    {
+      "id": "progress-04-explore-full",
+      "desc": "勘探 6/6 线索 → 55（上限）",
+      "given": { "state": { "stage": "EXPLORE", "ownedClues": ["C1", "C2", "C3", "C4", "C5", "C6"] } },
+      "expect": { "progress": 55 }
+    },
+    {
+      "id": "progress-05-deduce-one-proof",
+      "desc": "验证阶段通过 1 关 → 70",
+      "given": { "state": { "stage": "DEDUCE", "flags": { "proofB": true } } },
+      "expect": { "progress": 70 }
+    },
+    {
+      "id": "progress-06-deduce-both-proof",
+      "desc": "两关都过 → 85（上限）",
+      "given": { "state": { "stage": "DEDUCE", "flags": { "proofA": true, "proofB": true } } },
+      "expect": { "progress": 85 }
+    },
+    { "id": "progress-07-judge", "desc": "判断阶段", "given": { "state": { "stage": "JUDGE" } }, "expect": { "progress": 85 } },
+    { "id": "progress-08-ending", "desc": "结局演出", "given": { "state": { "stage": "ENDING" } }, "expect": { "progress": 95 } },
+    { "id": "progress-09-finished", "desc": "完结", "given": { "state": { "stage": "FINISHED" } }, "expect": { "progress": 100 } }
+  ]
+}

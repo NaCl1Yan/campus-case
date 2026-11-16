@@ -1,0 +1,31 @@
+{
+  "kind": "sceneGate",
+  "case": "campus_001",
+  "note": "场景可见性：已解锁直接通过，否则按 unlockCond 求值",
+  "cases": [
+    {
+      "id": "scene-01-locked",
+      "desc": "S2 需要 C2，未持有时不可进入",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"] }, "sceneId": "S2" },
+      "expect": { "available": false }
+    },
+    {
+      "id": "scene-02-cond-met",
+      "desc": "持有 C2 后 S2 可进入（条件式解锁，不依赖 unlockedScenes）",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"], "ownedClues": ["C2"] }, "sceneId": "S2" },
+      "expect": { "available": true }
+    },
+    {
+      "id": "scene-03-already-unlocked",
+      "desc": "已在 unlockedScenes 中，条件未满足也算可用（由 effect 显式解锁）",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1", "S4"] }, "sceneId": "S4" },
+      "expect": { "available": true }
+    },
+    {
+      "id": "scene-04-missing-c4",
+      "desc": "S4 需要 C4，未持有时不可进入",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S1", "S3"] }, "sceneId": "S4" },
+      "expect": { "available": false }
+    }
+  ]
+}

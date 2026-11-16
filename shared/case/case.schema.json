@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/NaCl1Yan/campus-case/shared/case/case.schema.json",
+  "title": "campus-case 内容文件 schema",
+  "type": "object",
+  "required": ["id", "title", "contentVersion", "brief", "scenes", "nodes", "clues", "rules", "chains", "proveStages", "endings", "finalChoices"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "contentVersion": { "type": "integer", "minimum": 1 },
+    "brief": { "$ref": "#/$defs/brief" },
+    "scenes": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/scene" } },
+    "nodes": { "type": "array", "minItems": 12, "items": { "$ref": "#/$defs/node" } },
+    "clues": { "type": "array", "minItems": 6, "items": { "$ref": "#/$defs/clue" } },
+    "rules": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/rule" } },
+    "chains": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/chain" } },
+    "proveStages": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/proveStage" } },
+    "endings": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/ending" } },
+    "finalChoices": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/finalChoice" } }
+  },
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allClues": { "type": "array", "items": { "type": "string" } },
+        "anyClues": { "type": "array", "items": { "type": "string" } },
+        "allFlags": { "type": "array", "items": { "type": "string" } },
+        "anyFlags": { "type": "array", "items": { "type": "string" } },
+        "noneFlags": { "type": "array", "items": { "type": "string" } },
+        "minStage": { "enum": ["PROLOGUE", "ACCEPT", "EXPLORE", "DEDUCE", "JUDGE", "ENDING", "FINISHED"] },
+        "closedNodes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grantClues": { "type": "array", "items": { "type": "string" } },
+        "setFlags": { "type": "array", "items": { "type": "array", "items": [{ "type": "string" }, { "type": "boolean" }], "minItems": 2, "maxItems": 2 } },
+        "unlockScenes": { "type": "array", "items": { "type": "string" } },
+        "closeNodes": { "type": "array", "items": { "type": "string" } },
+        "stage": { "enum": ["PROLOGUE", "ACCEPT", "EXPLORE", "DEDUCE", "JUDGE", "ENDING", "FINISHED"] }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "required": ["client", "summary", "objectives"],
+      "additionalProperties": false,
+      "properties": {
+        "client": { "type": "string" },
+        "summary": { "type": "string" },
+        "objectives": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["time", "text"],
+            "additionalProperties": false,
+            "properties": { "time": { "type": "string" }, "text": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "required": ["id", "name", "desc", "unlockCond", "hotspots"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "desc": { "type": "string" },
+        "bgAsset": { "type": "string" },
+        "enterFx": { "type": "string" },
+        "unlockCond": { "$ref": "#/$defs/condition" },
+        "hotspots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/hotspot" } }
+      }
+    },
+    "hotspot": {
+      "type": "object",
+      "required": ["id", "nodeId", "x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "nodeId": { "type": "string" },
+        "x": { "type": "number", "minimum": 0, "maximum": 1000 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1000 },
+        "r": { "type": "number", "minimum": 1, "maximum": 400 },
+        "lockedHint": { "type": "string" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "sceneId", "title", "body", "unlockCond", "effect"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "sceneId": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "unlockCond": { "$ref": "#/$defs/condition" },
+        "effect": { "$ref": "#/$defs/effect" },
+        "exclusiveWith": { "type": "array", "items": { "type": "string" } },
+        "repeatable": { "type": "boolean" }
+      }
+    },
+    "clue": {
+      "type": "object",
+      "required": ["id", "name", "type", "desc"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "enum": ["PHYSICAL", "TESTIMONY", "TIMELINE"] },
+        "chainId": { "type": "string" },
+        "desc": { "type": "string" },
+        "hintWhenMissing": { "type": "string" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "inputs", "chainId", "grantsFlag", "conclusion"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+        "chainId": { "type": "string" },
+        "grantsFlag": { "type": "string" },
+        "conclusion": { "type": "string" }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "required": ["id", "name", "clueIds", "ruleFlagIds", "passFlagId"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "clueIds": { "type": "array", "items": { "type": "string" } },
+        "ruleFlagIds": { "type": "array", "items": { "type": "string" } },
+        "passFlagId": { "type": "string" }
+      }
+    },
+    "proveStage": {
+      "type": "object",
+      "required": ["id", "question", "slots", "poolCond", "answer", "onPass"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "slots": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "poolCond": { "$ref": "#/$defs/condition" },
+        "answer": { "type": "array", "items": { "type": "string" } },
+        "onPass": { "$ref": "#/$defs/effect" },
+        "hints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ending": {
+      "type": "object",
+      "required": ["id", "name", "choiceId", "requires", "segments"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "choiceId": { "type": "string" },
+        "requires": { "$ref": "#/$defs/condition" },
+        "segments": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "finalChoice": {
+      "type": "object",
+      "required": ["id", "label", "requiresFlag"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "requiresFlag": { "type": "string" }
+      }
+    }
+  }
+}

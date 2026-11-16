@@ -1,0 +1,251 @@
+{
+  "id": "campus_001",
+  "title": "（占位案件）广播站母带失窃",
+  "subtitle": "占位内容 · 用于跑通引擎与双端一致性，不含正式剧情",
+  "contentVersion": 1,
+  "brief": {
+    "client": "（占位）匿名委托人",
+    "summary": "占位说明：校庆前夜成品母带失窃，玩家作为推理社成员介入调查。",
+    "objectives": [
+      "查清谁在 21:30 前后进入过广播站",
+      "查清拿走母带的动机",
+      "在证据链成立后作出最终判断"
+    ],
+    "timeline": [
+      { "time": "20:55", "text": "（占位）母带放入铁柜" },
+      { "time": "21:30", "text": "（占位）门禁出现一次刷卡记录" },
+      { "time": "21:40", "text": "（占位）发现铁柜已空" }
+    ]
+  },
+
+  "scenes": [
+    {
+      "id": "S1",
+      "name": "（占位）图书馆旧报刊区",
+      "desc": "占位场景说明 S1",
+      "unlockCond": {},
+      "enterFx": "warm",
+      "hotspots": [
+        { "id": "H1_1", "nodeId": "N01", "x": 500, "y": 620, "r": 90 },
+        { "id": "H1_2", "nodeId": "N02", "x": 300, "y": 400, "r": 80 },
+        { "id": "H1_3", "nodeId": "N07", "x": 720, "y": 430, "r": 80 }
+      ]
+    },
+    {
+      "id": "S2",
+      "name": "（占位）实验楼器材室",
+      "desc": "占位场景说明 S2",
+      "unlockCond": { "allClues": ["C2"] },
+      "enterFx": "cold",
+      "hotspots": [
+        { "id": "H2_1", "nodeId": "N03", "x": 420, "y": 500, "r": 85 },
+        { "id": "H2_2", "nodeId": "N04", "x": 640, "y": 520, "r": 85 }
+      ]
+    },
+    {
+      "id": "S3",
+      "name": "（占位）广播站",
+      "desc": "占位场景说明 S3",
+      "unlockCond": { "allClues": ["C1"] },
+      "enterFx": "neon",
+      "hotspots": [
+        { "id": "H3_1", "nodeId": "N05", "x": 350, "y": 380, "r": 80 },
+        { "id": "H3_2", "nodeId": "N06", "x": 610, "y": 400, "r": 80 },
+        { "id": "H3_3", "nodeId": "N08", "x": 500, "y": 680, "r": 80 },
+        { "id": "H3_4", "nodeId": "N10", "x": 200, "y": 700, "r": 70 }
+      ]
+    },
+    {
+      "id": "S4",
+      "name": "（占位）旧钟楼老播音间",
+      "desc": "占位场景说明 S4（条件解锁场景）",
+      "unlockCond": { "allClues": ["C4"] },
+      "enterFx": "dim",
+      "hotspots": [
+        { "id": "H4_1", "nodeId": "N09", "x": 500, "y": 450, "r": 100 }
+      ]
+    }
+  ],
+
+  "nodes": [
+    {
+      "id": "N01",
+      "sceneId": "S1",
+      "title": "接受调查",
+      "body": "（占位）接下这桩案子。",
+      "unlockCond": {},
+      "effect": { "stage": "EXPLORE", "setFlags": [["accepted", true]] },
+      "repeatable": false
+    },
+    {
+      "id": "N02",
+      "sceneId": "S1",
+      "title": "值班表上的涂改",
+      "body": "（占位）登记表的时间被改过。",
+      "unlockCond": { "allFlags": ["accepted"] },
+      "effect": { "grantClues": ["C2"], "unlockScenes": ["S2"], "setFlags": [["ledgerChecked", true]] }
+    },
+    {
+      "id": "N03",
+      "sceneId": "S2",
+      "title": "器材室的取用登记",
+      "body": "（占位）找实验员核对借用记录。",
+      "unlockCond": { "allClues": ["C2"] },
+      "effect": { "grantClues": ["C1"], "unlockScenes": ["S3"], "setFlags": [["registered", true]] },
+      "exclusiveWith": ["N04"]
+    },
+    {
+      "id": "N04",
+      "sceneId": "S2",
+      "title": "撬开器材室",
+      "body": "（占位）直接撬锁取卡。",
+      "unlockCond": { "allClues": ["C2"] },
+      "effect": {
+        "grantClues": ["C1"],
+        "unlockScenes": ["S3"],
+        "setFlags": [["breached", true]],
+        "closeNodes": ["N05"]
+      },
+      "exclusiveWith": ["N03"]
+    },
+    {
+      "id": "N05",
+      "sceneId": "S3",
+      "title": "内部群的删除消息",
+      "body": "（占位）被删掉的那条消息还留在通知里。",
+      "unlockCond": { "allClues": ["C2"], "noneFlags": ["breached"] },
+      "effect": { "grantClues": ["C4"], "unlockScenes": ["S4"] }
+    },
+    {
+      "id": "N06",
+      "sceneId": "S3",
+      "title": "被剪掉的录音",
+      "body": "（占位）调音台缓存里有一段被剪掉的音频。",
+      "unlockCond": { "anyClues": ["C1", "C2"] },
+      "effect": { "grantClues": ["C3"] }
+    },
+    {
+      "id": "N07",
+      "sceneId": "S1",
+      "title": "未寄出的道歉信",
+      "body": "（占位）夹在书页里的信。",
+      "unlockCond": { "allClues": ["C4"] },
+      "effect": { "grantClues": ["C5"] }
+    },
+    {
+      "id": "N08",
+      "sceneId": "S3",
+      "title": "节目单草稿",
+      "body": "（占位）红笔划掉了第 7 个节目。",
+      "unlockCond": { "allClues": ["C3"] },
+      "effect": { "grantClues": ["C6"] }
+    },
+    {
+      "id": "N09",
+      "sceneId": "S4",
+      "title": "老播音间的母带",
+      "body": "（占位）收音机暗格里找到了母带。",
+      "unlockCond": { "allClues": ["C5"] },
+      "effect": { "setFlags": [["tapeFound", true]] }
+    },
+    {
+      "id": "N10",
+      "sceneId": "S3",
+      "title": "进入推理工坊",
+      "body": "（占位）把线索摊开，开始验证。",
+      "unlockCond": { "anyClues": ["C1", "C2", "C3"] },
+      "effect": { "stage": "DEDUCE" }
+    },
+    {
+      "id": "N11",
+      "sceneId": "S3",
+      "title": "作出最终判断",
+      "body": "（占位）判断不可撤销。",
+      "unlockCond": { "anyFlags": ["proofA", "proofB"] },
+      "effect": { "stage": "ENDING" }
+    },
+    {
+      "id": "N12",
+      "sceneId": "S3",
+      "title": "结局登记",
+      "body": "（占位）收录进结局册。",
+      "unlockCond": { "anyFlags": ["proofA", "proofB"] },
+      "effect": { "stage": "FINISHED" }
+    }
+  ],
+
+  "clues": [
+    { "id": "C1", "name": "沾着白粉的钥匙卡", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）实验楼器材室钥匙卡。", "hintWhenMissing": "去实验楼方向看看" },
+    { "id": "C2", "name": "值班表上的涂改", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）时间被改过。", "hintWhenMissing": "图书馆的旧登记表" },
+    { "id": "C3", "name": "被剪掉的录音", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）缓存音频缺失 40 秒。", "hintWhenMissing": "广播站的调音台" },
+    { "id": "C4", "name": "内部群的删除消息", "type": "TESTIMONY", "chainId": "CH-A", "desc": "（占位）一条被删的约见消息。", "hintWhenMissing": "广播站的电脑" },
+    { "id": "C5", "name": "未寄出的道歉信", "type": "TESTIMONY", "chainId": "CH-A", "desc": "（占位）写给某人的信。", "hintWhenMissing": "图书馆自习区" },
+    { "id": "C6", "name": "节目单草稿", "type": "PHYSICAL", "chainId": "CH-A", "desc": "（占位）第 7 个节目被划掉。", "hintWhenMissing": "公告栏上的草稿" }
+  ],
+
+  "rules": [
+    { "id": "R1", "inputs": ["C1", "C2"], "chainId": "CH-B", "grantsFlag": "link.b1", "conclusion": "（占位）进入者来自实验楼方向，不是站长。" },
+    { "id": "R2", "inputs": ["C2", "C3"], "chainId": "CH-B", "grantsFlag": "link.b2", "conclusion": "（占位）剪辑发生在 21:30 之后。" },
+    { "id": "R3", "inputs": ["C5", "C6"], "chainId": "CH-A", "grantsFlag": "link.a1", "conclusion": "（占位）他看到的信息与真相相反。" }
+  ],
+
+  "chains": [
+    {
+      "id": "CH-B",
+      "name": "行动线",
+      "clueIds": ["C1", "C2", "C3"],
+      "ruleFlagIds": ["link.b1", "link.b2"],
+      "passFlagId": "proofB"
+    },
+    {
+      "id": "CH-A",
+      "name": "动机线",
+      "clueIds": ["C4", "C5", "C6"],
+      "ruleFlagIds": ["link.a1"],
+      "passFlagId": "proofA"
+    }
+  ],
+
+  "proveStages": [
+    {
+      "id": "P1",
+      "question": "（占位）谁第二次进了广播站？",
+      "slots": 2,
+      "poolCond": { "anyClues": ["C1", "C2", "C3"] },
+      "answer": ["C1", "C2"],
+      "onPass": { "setFlags": [["proofB", true]] },
+      "hints": ["先看时间对不对得上", "再看进入者从哪来"]
+    },
+    {
+      "id": "P2",
+      "question": "（占位）他为什么拿走母带？",
+      "slots": 2,
+      "poolCond": { "anyClues": ["C4", "C5", "C6"] },
+      "answer": ["C5", "C6"],
+      "onPass": { "setFlags": [["proofA", true]] },
+      "hints": ["信里说了什么", "节目单被谁动过"]
+    }
+  ],
+
+  "endings": [
+    {
+      "id": "E-A",
+      "name": "（占位结局 A）七点钟声",
+      "choiceId": "PRIVATE",
+      "requires": { "allFlags": ["proofA", "tapeFound"] },
+      "segments": ["（占位）他自首了。", "（占位）节目以合播补上。", "（占位）真相不是把人钉在墙上。"]
+    },
+    {
+      "id": "E-B",
+      "name": "（占位结局 B）留白",
+      "choiceId": "PUBLIC",
+      "requires": { "allFlags": ["proofB"] },
+      "segments": ["（占位）证据交给纪律组。", "（占位）程序正确。", "（占位）你赢了推理，输了那个晚上。"]
+    }
+  ],
+
+  "finalChoices": [
+    { "id": "PUBLIC", "label": "把证据交给纪律组", "requiresFlag": "proofB" },
+    { "id": "PRIVATE", "label": "先私下对质，给对方一次开口的机会", "requiresFlag": "proofA" }
+  ]
+}

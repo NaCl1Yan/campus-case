@@ -1,0 +1,43 @@
+{
+  "kind": "combine",
+  "case": "campus_001",
+  "note": "连线校验：顺序无关、未持有拒绝、无规则不惩罚",
+  "cases": [
+    {
+      "id": "combine-01-hit",
+      "desc": "C1 + C2 命中 R1",
+      "given": { "state": { "ownedClues": ["C1", "C2"] }, "a": "C1", "b": "C2" },
+      "expect": { "ok": true, "ruleId": "R1", "grantsFlag": "link.b1" }
+    },
+    {
+      "id": "combine-02-order-independent",
+      "desc": "顺序反过来同样命中",
+      "given": { "state": { "ownedClues": ["C1", "C2"] }, "a": "C2", "b": "C1" },
+      "expect": { "ok": true, "ruleId": "R1", "grantsFlag": "link.b1" }
+    },
+    {
+      "id": "combine-03-no-rule",
+      "desc": "无对应规则：不成立、不改变任何状态",
+      "given": { "state": { "ownedClues": ["C1", "C5"] }, "a": "C1", "b": "C5" },
+      "expect": { "ok": false, "reason": "NO_RULE" }
+    },
+    {
+      "id": "combine-04-not-owned",
+      "desc": "只持有 C1，C2 未获得 → 拒绝",
+      "given": { "state": { "ownedClues": ["C1"] }, "a": "C1", "b": "C2" },
+      "expect": { "ok": false, "reason": "NOT_OWNED" }
+    },
+    {
+      "id": "combine-05-self-link",
+      "desc": "同一条线索不可自连",
+      "given": { "state": { "ownedClues": ["C1", "C2"] }, "a": "C1", "b": "C1" },
+      "expect": { "ok": false, "reason": "SAME_CLUE" }
+    },
+    {
+      "id": "combine-06-chain-a-rule",
+      "desc": "C5 + C6 命中 R3（动机线）",
+      "given": { "state": { "ownedClues": ["C4", "C5", "C6"] }, "a": "C6", "b": "C5" },
+      "expect": { "ok": true, "ruleId": "R3", "grantsFlag": "link.a1" }
+    }
+  ]
+}

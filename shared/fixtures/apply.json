@@ -1,0 +1,108 @@
+{
+  "kind": "apply",
+  "case": "campus_001",
+  "note": "节点应用：事务语义（全成或全不成）、幂等、互斥关闭、阶段转移校验；断言前数组统一排序",
+  "cases": [
+    {
+      "id": "apply-01-grant-clue",
+      "desc": "N02 产出 C2 并解锁 S2，seq +1",
+      "given": {
+        "state": { "stage": "EXPLORE", "unlockedScenes": ["S1"], "flags": { "accepted": true }, "seq": 1 },
+        "nodeId": "N02"
+      },
+      "expect": {
+        "ok": true,
+        "state": {
+          "stage": "EXPLORE",
+          "ownedClues": ["C2"],
+          "unlockedScenes": ["S1", "S2"],
+          "appliedNodes": ["N02"],
+          "flags": { "accepted": true, "ledgerChecked": true },
+          "seq": 2
+        }
+      }
+    },
+    {
+      "id": "apply-02-idempotent",
+      "desc": "同一非 repeatable 节点重复应用：不报错、不重复给线索、seq 不变",
+      "given": {
+        "state": {
+          "stage": "EXPLORE",
+          "unlockedScenes": ["S1", "S2"],
+          "ownedClues": ["C2"],
+          "appliedNodes": ["N02"],
+          "flags": { "accepted": true, "ledgerChecked": true },
+          "seq": 3
+        },
+        "nodeId": "N02"
+      },
+      "expect": {
+        "ok": true,
+        "noop": true,
+        "state": { "ownedClues": ["C2"], "seq": 3, "appliedNodes": ["N02"] }
+      }
+    },
+    {
+      "id": "apply-03-stage-transit",
+      "desc": "接案：ACCEPT → EXPLORE 合法（打开简报即进入 ACCEPT，接案节点推进到 EXPLORE）",
+      "given": { "state": { "stage": "ACCEPT", "unlockedScenes": ["S1"], "seq": 0 }, "nodeId": "N01" },
+      "expect": {
+        "ok": true,
+        "state": { "stage": "EXPLORE", "flags": { "accepted": true }, "seq": 1, "appliedNodes": ["N01"] }
+      }
+    },
+    {
+      "id": "apply-04-invalid-transition",
+      "desc": "EXPLORE 直接跳到 FINISHED：非法转移，状态不变",
+      "given": {
+        "state": {
+          "stage": "EXPLORE",
+          "unlockedScenes": ["S1", "S2", "S3", "S4"],
+          "ownedClues": ["C1", "C2", "C3"],
+          "flags": { "accepted": true, "proofA": true, "proofB": true },
+          "seq": 5
+        },
+        "nodeId": "N12"
+      },
+      "expect": {
+        "ok": false,
+        "error": "E_STATE_INVALID_TRANSITION",
+        "state": { "stage": "EXPLORE", "seq": 5 }
+      }
+    },
+    {
+      "id": "apply-05-closed-node",
+      "desc": "已关闭节点不可应用",
+      "given": {
+        "state": { "stage": "EXPLORE", "unlockedScenes": ["S3"], "ownedClues": ["C2"], "closedNodes": ["N05"] },
+        "nodeId": "N05"
+      },
+      "expect": { "ok": false, "error": "E_NODE_CLOSED", "state": { "seq": 0, "ownedClues": ["C2"] } }
+    },
+    {
+      "id": "apply-06-locked-node",
+      "desc": "前置不满足：N03 需要 C2",
+      "given": { "state": { "stage": "EXPLORE", "unlockedScenes": ["S2"] }, "nodeId": "N03" },
+      "expect": { "ok": false, "error": "E_NODE_LOCKED", "state": { "seq": 0 } }
+    },
+    {
+      "id": "apply-07-exclusive-close",
+      "desc": "撬锁（N04）：置 breached、关闭 N03 与 N05、仍产出 C1",
+      "given": {
+        "state": { "stage": "EXPLORE", "unlockedScenes": ["S2"], "ownedClues": ["C2"], "seq": 1 },
+        "nodeId": "N04"
+      },
+      "expect": {
+        "ok": true,
+        "state": {
+          "ownedClues": ["C1", "C2"],
+          "unlockedScenes": ["S2", "S3"],
+          "closedNodes": ["N03", "N05"],
+          "flags": { "breached": true },
+          "seq": 2,
+          "appliedNodes": ["N04"]
+        }
+      }
+    }
+  ]
+}

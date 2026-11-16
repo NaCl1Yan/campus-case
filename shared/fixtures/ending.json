@@ -1,0 +1,69 @@
+{
+  "kind": "ending",
+  "case": "campus_001",
+  "note": "结局判定：选项可见性由证据链决定，选择与链不符一律拦截（TC-13 / TC-15 / TC-18）",
+  "cases": [
+    {
+      "id": "ending-01-b-only-no-choice",
+      "desc": "只有行动线：PUBLIC 可选、PRIVATE 不可选，尚未出结局",
+      "given": { "state": { "stage": "JUDGE", "flags": { "proofB": true } } },
+      "expect": { "canPublic": true, "canPrivate": false, "ready": true, "endingId": null }
+    },
+    {
+      "id": "ending-02-b-only-public",
+      "desc": "行动线 + PUBLIC → E-B",
+      "given": { "state": { "stage": "ENDING", "flags": { "proofB": true }, "finalChoice": "PUBLIC" } },
+      "expect": { "canPublic": true, "canPrivate": false, "ready": true, "endingId": "E-B" }
+    },
+    {
+      "id": "ending-03-a-only-private",
+      "desc": "动机线齐（含 tapeFound）+ PRIVATE → E-A",
+      "given": {
+        "state": { "stage": "ENDING", "flags": { "proofA": true, "tapeFound": true }, "finalChoice": "PRIVATE" }
+      },
+      "expect": { "canPublic": false, "canPrivate": true, "ready": true, "endingId": "E-A" }
+    },
+    {
+      "id": "ending-04-both-public",
+      "desc": "两链都成立 + PUBLIC → E-B",
+      "given": {
+        "state": {
+          "stage": "ENDING",
+          "flags": { "proofA": true, "tapeFound": true, "proofB": true },
+          "finalChoice": "PUBLIC"
+        }
+      },
+      "expect": { "canPublic": true, "canPrivate": true, "ready": true, "endingId": "E-B" }
+    },
+    {
+      "id": "ending-05-both-private",
+      "desc": "两链都成立 + PRIVATE → E-A（同一状态下由选择决定结局）",
+      "given": {
+        "state": {
+          "stage": "ENDING",
+          "flags": { "proofA": true, "tapeFound": true, "proofB": true },
+          "finalChoice": "PRIVATE"
+        }
+      },
+      "expect": { "canPublic": true, "canPrivate": true, "ready": true, "endingId": "E-A" }
+    },
+    {
+      "id": "ending-06-none",
+      "desc": "两链都不成立：不可进判断",
+      "given": { "state": { "stage": "DEDUCE", "flags": {} } },
+      "expect": { "canPublic": false, "canPrivate": false, "ready": false, "endingId": null }
+    },
+    {
+      "id": "ending-07-missing-tape",
+      "desc": "有 proofA 但没有 tapeFound：动机线不算成立",
+      "given": { "state": { "stage": "ENDING", "flags": { "proofA": true }, "finalChoice": "PRIVATE" } },
+      "expect": { "canPublic": false, "canPrivate": false, "ready": false, "endingId": null }
+    },
+    {
+      "id": "ending-08-forged-choice",
+      "desc": "伪造 finalChoice=PUBLIC 但两链都不成立 → 拦截，不出结局",
+      "given": { "state": { "stage": "ENDING", "flags": {}, "finalChoice": "PUBLIC" } },
+      "expect": { "canPublic": false, "canPrivate": false, "ready": false, "endingId": null }
+    }
+  ]
+}
