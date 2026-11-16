@@ -18,6 +18,7 @@
 | [01-基础功能需求规格说明](docs/01-基础功能需求规格说明.md) | 软件基础功能 FR-01～FR-17、通用规则、验收标准、测试要求（**平台无关**） | v1.2 定稿 |
 | [02-内容与剧情设计规范](docs/02-内容与剧情设计规范.md) | 内容 schema、规模约束、校验规则 | v0.1 骨架，正文待定 |
 | [03-Android版实现规格说明](docs/03-Android版实现规格说明.md) | FR → Android 落地映射、状态/存储/动画/恢复对照、双端一致性策略 | v1.0 |
+| [04-首轮编译绿检查单](docs/04-首轮编译绿检查单.md) | 在 IDE 里跑通两端编译与单测的步骤、期望输出、报错对照表 | v1.0 |
 | [drafts/剧情草案-v0](docs/drafts/剧情草案-v0.md) | 早期含具体剧情的混写版，仅作素材保留 | 草案，不采用 |
 
 **阅读顺序**：先看 01 的「§3 通用规则」和「§4 功能需求」，那是所有实现的判定依据；再看 03 的对照表了解各平台怎么落地；02 只定内容长什么样，具体剧情后续单独写。
@@ -153,15 +154,20 @@ campus-case/
 ## 5. 如何验证（M2 现状）
 
 ```powershell
-# 1) 内容校验 + 规格自检（现在就能跑，只需 Python）
+# 1) 离线预检：配置/资源/符号/Gradle 目录（现在就能跑，只需 Python）
+python tools/preflight.py            # 期望：PASS 9 / FAIL 0
+
+# 2) 内容校验 + 规格自检（现在就能跑，只需 Python）
 python tools/validate.py            # 期望：内容通过 + 42/42 用例通过
 
-# 2) Android 引擎单测（需要一个 Gradle，或用 Android Studio 打开 android/）
+# 3) Android 引擎单测（需要一个 Gradle，或用 Android Studio 打开 android/）
 cd android; ./gradlew :domain:test
 
-# 3) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
+# 4) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
 cd harmony; hvigorw test
 ```
+
+首次在 IDE 里跑编译的完整步骤、期望输出与报错对照表见 [首轮编译绿检查单](docs/04-首轮编译绿检查单.md)。
 
 `tools/validate.py` 是开发期参照实现：它跑通只代表"用例与 01 §5.3 语义一致"，**不代表两端代码已跑**。两端要各自跑通同一批 fixtures 才算 AC-18 成立。
 
