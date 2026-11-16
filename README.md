@@ -145,7 +145,7 @@ campus-case/
 | --- | --- | --- |
 | 需求文档（基础功能，FR-01～17） | ✅ v1.4 | ✅ 沿用同一套（03 文档为映射） |
 | 内容设计（schema + 占位案件 + 42 条用例） | ✅ 已落地 `shared/` | ✅ 同一份，不复制 |
-| `domain/` 判定引擎 | 🚧 代码完成（待 DevEco 编译 + 跑 Hypium） | ✅ kotlinc 2.1 实编译 + JUnit5：16/16 通过 |
+| `domain/` 判定引擎 | ✅ 真编译通过（hvigor 5.17.5 / SDK 5.0.5(17)，main + ohosTest）；执行待设备 | ✅ kotlinc 2.1 实编译 + JUnit5：16/16 通过 |
 | 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
@@ -172,6 +172,10 @@ cd android; ./gradlew :domain:test
 # 5) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
 cd harmony; hvigorw test
 ```
+
+> **中文路径限制**：hvigor 拒绝含中文的工程路径。本仓库在 `E:\校园推理galgame`，所以命令行构建请用
+> `powershell -File tools/build-harmony.ps1`（镜像到 `%LOCALAPPDATA%\campus-case-build` 后构建，已实测 PASS）。
+> 想在 DevEco 里直接跑，建议把仓库移到纯英文路径。
 
 首次在 IDE 里跑编译的完整步骤、期望输出与报错对照表见 [首轮编译绿检查单](docs/04-首轮编译绿检查单.md)。
 
