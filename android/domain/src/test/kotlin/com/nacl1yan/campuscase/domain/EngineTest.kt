@@ -234,10 +234,18 @@ class EngineTest {
         assertTrue(s.flags["tapeFound"] == true)
         assertTrue(s.unlockedScenes.contains("S4"))
 
+        // 进入推理工坊（EXPLORE → DEDUCE；不经这一跳直接进 JUDGE 属非法转移）
+        val workshop = Engine.applyNode(s, case, "N10")
+        assertTrue(workshop.ok, "N10 应可应用")
+        assertEquals(Stage.DEDUCE, workshop.state.stage)
+
         // 关卡通过（模拟 onPass 写入 proofA）
-        s = s.copy(flags = s.flags + ("proofA" to true), passedStages = listOf("P2"))
-        assertTrue(Engine.enterJudge(s).ok)
-        val judge = Engine.enterJudge(s).state
+        val proved = workshop.state.copy(
+            flags = workshop.state.flags + ("proofA" to true),
+            passedStages = listOf("P2"),
+        )
+        assertTrue(Engine.enterJudge(proved).ok)
+        val judge = Engine.enterJudge(proved).state
         assertEquals(Stage.JUDGE, judge.stage)
 
         val submitted = Engine.submitFinalChoice(judge, case, "PRIVATE")

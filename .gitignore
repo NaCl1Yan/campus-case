@@ -50,6 +50,9 @@ tmp/
 __pycache__/
 *.pyc
 
+# ---- 本地工具链缓存（run-kotlin-tests.ps1 下载的 jar）----
+.tools/
+
 # ---- Android / Gradle 产物 ----
 *.apk
 *.aab

@@ -1,7 +1,57 @@
+@file:OptIn(kotlinx.serialization.InternalSerializationApi::class)
+
 package com.nacl1yan.campuscase.domain
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+/**
+ * 内容 JSON 里 setFlags 用紧凑写法 `[["accepted", true]]`。
+ * kotlinx 默认把 Pair 序列化成对象（first/second 两个字段），与内容格式不符，
+ * 因此这里按"两元素数组"自定义序列化；ArkTS 侧 tuple 本身就是数组，无需处理。
+ */
+object FlagPairSerializer : KSerializer<Pair<String, Boolean>> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("FlagPair", StructureKind.LIST) {
+            element("flag", String.serializer().descriptor)
+            element("value", Boolean.serializer().descriptor)
+        }
+
+    override fun serialize(encoder: Encoder, value: Pair<String, Boolean>) {
+        val out = encoder.beginStructure(descriptor)
+        out.encodeStringElement(descriptor, 0, value.first)
+        out.encodeBooleanElement(descriptor, 1, value.second)
+        out.endStructure(descriptor)
+    }
+
+    override fun deserialize(decoder: Decoder): Pair<String, Boolean> {
+        val input = decoder.beginStructure(descriptor)
+        var flag = ""
+        var value = false
+        while (true) {
+            when (val index = input.decodeElementIndex(descriptor)) {
+                0 -> flag = input.decodeStringElement(descriptor, 0)
+                1 -> value = input.decodeBooleanElement(descriptor, 1)
+                CompositeDecoder.DECODE_DONE -> break
+                else -> error("FlagPair 期望 2 个元素，遇到索引 $index")
+            }
+        }
+        input.endStructure(descriptor)
+        return flag to value
+    }
+}
+
+object FlagListSerializer : KSerializer<List<Pair<String, Boolean>>> by
+    ListSerializer(FlagPairSerializer)
 
 // ---------------------------------------------------------------- 枚举
 
@@ -37,6 +87,7 @@ data class Condition(
 @Serializable
 data class Effect(
     val grantClues: List<String> = emptyList(),
+    @Serializable(with = FlagListSerializer::class)
     val setFlags: List<Pair<String, Boolean>> = emptyList(),
     val unlockScenes: List<String> = emptyList(),
     val closeNodes: List<String> = emptyList(),

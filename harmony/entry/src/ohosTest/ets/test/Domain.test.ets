@@ -206,9 +206,15 @@ export default function domainTest() {
       expect(s.flags.get('tapeFound')).assertTrue();
       expect(s.unlockedScenes.includes('S4')).assertTrue();
 
-      s.flags.set('proofA', true);
-      s.passedStages = ['P2'];
-      const judge = Engine.enterJudge(s);
+      // 进入推理工坊（EXPLORE → DEDUCE；不经这一跳直接进 JUDGE 属非法转移）
+      const workshop = Engine.applyNode(s, caseFile, 'N10');
+      expect(workshop.ok).assertTrue();
+      expect(workshop.state.stage).assertEqual(Stage.DEDUCE);
+
+      const proved = workshop.state;
+      proved.flags.set('proofA', true);
+      proved.passedStages = ['P2'];
+      const judge = Engine.enterJudge(proved);
       expect(judge.ok).assertTrue();
       expect(judge.state.stage).assertEqual(Stage.JUDGE);
 

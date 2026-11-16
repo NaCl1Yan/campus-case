@@ -145,7 +145,7 @@ campus-case/
 | --- | --- | --- |
 | 需求文档（基础功能，FR-01～17） | ✅ v1.4 | ✅ 沿用同一套（03 文档为映射） |
 | 内容设计（schema + 占位案件 + 42 条用例） | ✅ 已落地 `shared/` | ✅ 同一份，不复制 |
-| `domain/` 判定引擎 | ✅ 代码完成（待 DevEco 编译 + 跑 Hypium） | ✅ 代码完成（待 Gradle 跑 JUnit5） |
+| `domain/` 判定引擎 | 🚧 代码完成（待 DevEco 编译 + 跑 Hypium） | ✅ kotlinc 2.1 实编译 + JUnit5：16/16 通过 |
 | 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
@@ -154,13 +154,16 @@ campus-case/
 ## 5. 如何验证（M2 现状）
 
 ```powershell
-# 1) 离线预检：配置/资源/符号/Gradle 目录（现在就能跑，只需 Python）
+# 0) 无 IDE 跑 Kotlin 领域单测（自动下载编译器 + JUnit，本机已实测 16/16 PASS）
+powershell -File tools/run-kotlin-tests.ps1
+
+# 1) 离线预检：配置/资源/符号/Gradle 目录（只需 Python）
 python tools/preflight.py            # 期望：PASS 9 / FAIL 0
 
-# 2) 内容校验 + 规格自检（现在就能跑，只需 Python）
+# 2) 内容校验 + 规格自检（只需 Python）
 python tools/validate.py            # 期望：内容通过 + 42/42 用例通过
 
-# 3) Android 引擎单测（需要一个 Gradle，或用 Android Studio 打开 android/）
+# 3) Android 引擎单测（有 Gradle / Android Studio 时；与本机脚本跑同一批用例）
 cd android; ./gradlew :domain:test
 
 # 4) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）

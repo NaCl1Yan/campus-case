@@ -148,11 +148,13 @@ object Engine {
         return ApplyOutcome(true, state.copy(stage = Stage.JUDGE))
     }
 
-    /** 提交最终判断：不可撤销；选择与证据链不符一律拦截（TC-18）。 */
+    /**
+     * 提交最终判断：不可撤销。
+     * 校验顺序为"选项 → 该选项对应链是否就绪 → 阶段转移"，因此
+     * 「有 proofA 但缺 tapeFound」这类情况返回 E_FINAL_MISMATCH（01 §FR-09 规则 6），
+     * 而不是笼统的 E_CHAIN_NOT_READY（那个属于 enterJudge）。
+     */
     fun submitFinalChoice(state: PlayerState, case: CaseFile, choiceId: String): ApplyOutcome {
-        if (!canPublic(state) && !canPrivate(state)) {
-            return ApplyOutcome(false, state, Errs.CHAIN_NOT_READY)
-        }
         val allowed = case.finalChoices.firstOrNull { it.id == choiceId }
             ?: return ApplyOutcome(false, state, Errs.FINAL_MISMATCH)
         if (!chainReady(state, allowed.requiresFlag)) {

@@ -17,8 +17,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * 双端一致性 runner（AC-18）：读取 shared/fixtures/*.json，
+ * 双端一致性 runner（AC-18）：读取 shared/fixtures 下的 JSON 用例，
  * 用本端引擎求值并与期望做"部分匹配"。鸿蒙侧有同构的 runner。
+ * 注意：Kotlin 块注释可嵌套，注释里不要出现斜杠加星号的组合（会打开嵌套注释）。
  */
 class FixtureTest {
 

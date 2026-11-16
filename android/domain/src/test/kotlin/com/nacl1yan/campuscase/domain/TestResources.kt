@@ -8,6 +8,8 @@ object TestResources {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+        // 断言要逐字段比对：默认值（seq=0、stage=PROLOGUE 等）也必须出现在序列化结果里
+        encodeDefaults = true
     }
 
     fun text(path: String): String {
