@@ -46,6 +46,10 @@ tmp/
 *.tmp
 ~$*
 
+# ---- Python ----
+__pycache__/
+*.pyc
+
 # ---- Android / Gradle 产物 ----
 *.apk
 *.aab
