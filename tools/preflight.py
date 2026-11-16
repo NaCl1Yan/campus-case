@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import py_compile
+import subprocess
 import re
 import sys
 from pathlib import Path
@@ -255,11 +256,68 @@ def check_kotlin_symbols() -> None:
         ok("5 跨端符号", f"Kotlin 调用点全部命中（Engine {len(engine_fns)} 个函数，CaseLoader {len(loader_fns)} 个）")
 
 
+EXPORT_RE = re.compile(
+    r"export\s+(?:interface|class|enum|function|type|const|let)\s+([A-Za-z_][A-Za-z0-9_]*)"
+)
+
+
+def exports_of(path: Path) -> set[str]:
+    return set(EXPORT_RE.findall(path.read_text(encoding="utf-8")))
+
+
+def check_arkts_imports() -> None:
+    """ArkTS 的相对导入必须指向真实文件，且导入的名字确实是对方的导出。"""
+    bad = 0
+    for src in ROOT.glob("harmony/**/*.ets"):
+        text = src.read_text(encoding="utf-8")
+        for block, target in re.findall(r"import\s*\{([^}]*)\}\s*from\s*'(\.[^']*)'", text):
+            rel = src.relative_to(ROOT).as_posix()
+            if target.endswith(".ets"):
+                cand = (src.parent / target).resolve()
+            else:
+                cand = (src.parent / (target + ".ets")).resolve()
+            if not cand.exists():
+                fail("6 ArkTS 导入", f"{rel}: 导入的文件不存在 {target}")
+                bad += 1
+                continue
+            declared = exports_of(cand)
+            for raw in block.split(","):
+                name = raw.strip().split(" as ")[0].strip()
+                if not name or name in {"type"}:
+                    continue
+                if name not in declared:
+                    fail("6 ArkTS 导入", f"{rel}: 从 {target} 导入了未导出的 {name}")
+                    bad += 1
+    if bad == 0:
+        ok("6 ArkTS 导入", "相对导入的文件与符号均存在")
+
+
+def check_generated_fixtures() -> None:
+    """鸿蒙侧 fixtures 常量是生成物：必须存在且与 shared/fixtures 一致。"""
+    generator = ROOT / "tools/gen_fixtures_ets.py"
+    output = ROOT / "harmony/entry/src/ohosTest/ets/test/Fixtures.generated.ets"
+    if not generator.exists():
+        fail("9 Fixtures 生成物", "缺少 tools/gen_fixtures_ets.py")
+        return
+    if not output.exists():
+        fail("9 Fixtures 生成物", "缺少 Fixtures.generated.ets，请运行 python tools/gen_fixtures_ets.py")
+        return
+    proc = subprocess.run(
+        [sys.executable, str(generator), "--check"],
+        cwd=str(ROOT), capture_output=True, text=True, encoding="utf-8",
+    )
+    if proc.returncode != 0:
+        detail = (proc.stdout or proc.stderr or "").strip().splitlines()
+        fail("9 Fixtures 生成物", detail[-1] if detail else "生成物漂移")
+        return
+    size_kb = round(output.stat().st_size / 1024, 1)
+    ok("9 Fixtures 生成物", f"与 shared/fixtures 一致（{size_kb} KB）")
+
+
 def check_arkts_symbols() -> None:
     engine_path = ROOT / "harmony/entry/src/main/ets/domain/Engine.ets"
     loader_path = ROOT / "harmony/entry/src/main/ets/domain/CaseLoader.ets"
-    types_path = ROOT / "harmony/entry/src/main/ets/domain/Types.ets"
-    if not all(p.exists() for p in (engine_path, loader_path, types_path)):
+    if not all(p.exists() for p in (engine_path, loader_path)):
         fail("5 跨端符号", "ArkTS 引擎文件缺失")
         return
 
@@ -274,26 +332,6 @@ def check_arkts_symbols() -> None:
                     bad += 1
     if bad == 0:
         ok("5 跨端符号", f"ArkTS 调用点全部命中（Engine {len(engine_fns)} 个，CaseLoader {len(loader_fns)} 个）")
-
-    # 6. ArkTS 从 ./Types 导入的名字是否真的导出
-    exported: set[str] = set()
-    text = types_path.read_text(encoding="utf-8")
-    exported |= set(re.findall(r"export\s+(?:interface|class|enum|function|type)\s+([A-Za-z_][A-Za-z0-9_]*)", text))
-    exported |= set(re.findall(r"export\s+const\s+([A-Za-z_][A-Za-z0-9_]*)", text))
-
-    bad = 0
-    for src in ROOT.glob("harmony/**/*.ets"):
-        source = src.read_text(encoding="utf-8")
-        for block in re.findall(r"import\s*\{([^}]*)\}\s*from\s*'\.\.?/.*?Types'", source):
-            for raw in block.split(","):
-                name = raw.strip().split(" as ")[0].strip()
-                if not name:
-                    continue
-                if name not in exported:
-                    fail("6 类型导入", f"{src.relative_to(ROOT).as_posix()}: 导入了 Types 未导出的 {name}")
-                    bad += 1
-    if bad == 0:
-        ok("6 类型导入", f"Types.ets 导出的 {len(exported)} 个符号覆盖全部导入")
 
 
 # ---------------------------------------------------------------- 7 Gradle 目录
@@ -367,8 +405,10 @@ def main() -> int:
     check_harmony(configs)
     check_kotlin_symbols()
     check_arkts_symbols()
+    check_arkts_imports()
     check_gradle_catalog()
     check_python_tools()
+    check_generated_fixtures()
 
     fails = [r for r in results if r[0] == "FAIL"]
     warns = [r for r in results if r[0] == "WARN"]

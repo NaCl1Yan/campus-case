@@ -275,6 +275,7 @@ campus-case/
 | 规格单源 | 两端都对照 01 文档的 FR/AC 编号实现，不各写一份 | 需求漂移 |
 | 内容单源 | `shared/case/*.json`，两端构建期复制 | 剧情改一处漏一处 |
 | 测试向量共享 | `shared/fixtures/*.json` 描述"输入状态 + 动作 → 期望结果"，两端各自读取并断言 | 判定逻辑分叉（最致命） |
+| 生成型用例 | ArkTS 侧无法直接跑动态 JSON 断言，用 `tools/gen_fixtures_ets.py` 把同一批 fixtures 生成为强类型 constants（`Fixtures.generated.ets`），Hypium 只做遍历断言；`preflight.py` 校验生成物是否漂移 | ArkTS 端缺少等价校验手段 |
 | 快照 schema 相同 | 字段名/大小写/枚举名完全一致，`v` 字段做版本 | 存档跨端不可读 |
 | 错误码相同 | `E_*` 字符串两端一致 | 日志/排查无法对照 |
 | 双端对照表 | 01 文档 AC 表旁加一列"Android 验收"（同一口径） | 只验一头 |

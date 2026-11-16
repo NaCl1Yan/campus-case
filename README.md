@@ -149,7 +149,7 @@ campus-case/
 | 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
-| 双端一致性（fixtures 双向校验） | 🚧 14 条语义用例；fixture runner 待补（AC-18 未闭环） | ✅ fixture runner 已随单测跑通 |
+| 双端一致性（fixtures 双向校验） | ✅ 42 条用例生成为强类型断言，8 组 Hypium（待 DevEco 执行） | ✅ fixture runner 已随单测跑通 |
 
 ## 5. 如何验证（M2 现状）
 
@@ -157,16 +157,19 @@ campus-case/
 # 0) 无 IDE 跑 Kotlin 领域单测（自动下载编译器 + JUnit，本机已实测 16/16 PASS）
 powershell -File tools/run-kotlin-tests.ps1
 
-# 1) 离线预检：配置/资源/符号/Gradle 目录（只需 Python）
-python tools/preflight.py            # 期望：PASS 9 / FAIL 0
+# 1) 离线预检：配置/资源/符号/导入/生成物一致性（只需 Python）
+python tools/preflight.py            # 期望：PASS 10 / FAIL 0
 
 # 2) 内容校验 + 规格自检（只需 Python）
 python tools/validate.py            # 期望：内容通过 + 42/42 用例通过
 
-# 3) Android 引擎单测（有 Gradle / Android Studio 时；与本机脚本跑同一批用例）
+# 3) 把 fixtures 生成为鸿蒙侧强类型用例（改了 shared/fixtures 才需要重跑）
+python tools/gen_fixtures_ets.py
+
+# 4) Android 引擎单测（有 Gradle / Android Studio 时；与本机脚本跑同一批用例）
 cd android; ./gradlew :domain:test
 
-# 4) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
+# 5) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
 cd harmony; hvigorw test
 ```
 
