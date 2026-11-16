@@ -205,6 +205,17 @@ class EngineTest {
         assertFalse(Engine.canPrivate(s), "动机线不成立")
     }
 
+    /** 初始状态：简报已打开（ACCEPT）+ 开局场景已种入（与鸿蒙侧 Engine.initialState 对齐） */
+    @Test
+    fun initialStateIsAcceptWithStartScenes() {
+        val s = Engine.initialState(case)
+        assertEquals(Stage.ACCEPT, s.stage)
+        assertEquals(listOf("S1"), s.unlockedScenes)
+        assertEquals(0, s.seq)
+        assertEquals(case.id, s.caseId)
+        assertEquals(case.contentVersion, s.contentVersion)
+    }
+
     /** 完整链路：接案 → 探索 → 验证 → 判断 → 结局（AC-11） */
     @Test
     fun fullHappyPath() {

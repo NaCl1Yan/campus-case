@@ -24,6 +24,12 @@ object Engine {
         return state.copy(unlockedScenes = (state.unlockedScenes + seeds).distinct().sorted())
     }
 
+    /** 首次进入的初始状态：简报已打开（ACCEPT），并种入开局场景。与 ArkTS Engine.initialState 对应。 */
+    fun initialState(case: CaseFile): PlayerState = seedDefaultScenes(
+        case,
+        PlayerState(caseId = case.id, contentVersion = case.contentVersion, stage = Stage.ACCEPT),
+    )
+
     fun evalCondition(state: PlayerState, cond: Condition?): Boolean {
         if (cond == null) return true
         val owned = state.ownedClues.toSet()
