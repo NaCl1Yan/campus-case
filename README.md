@@ -101,7 +101,11 @@ campus-case/
 | 版本标记 | 可交付版本打语义化 tag：`v0.1.0`（M3 可玩）、`v1.0.0`（验收通过） |
 | 回滚 | 优先 `git revert <sha>`（保留历史）；禁止对已推送历史 `reset --hard` |
 
-> **网络提示**：本机 443 直连 GitHub 会被重置，仓库级已配置本地代理 `http.proxy = http://127.0.0.1:7890`（Clash）。push 失败先确认代理在跑；临时走直连可 `git -c http.proxy= push`。
+> **网络提示**：本机到 GitHub 的 443 时通时断（会被重置），本地 Clash（`127.0.0.1:7890`）对 `github.com` 也会偶发握手失败。仓库**不设**代理配置，push 失败时两种都试：
+> - 直连：`git push`
+> - 临时代理：`git -c http.proxy=http://127.0.0.1:7890 push`
+>
+> 先用 `curl.exe -s -o NUL -w "%{http_code}" https://github.com` 判断：返回 `200` 就走直连，`000` 就换代理。
 
 ### 2.5 提交前检查清单
 
