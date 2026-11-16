@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "campus-case"
 include(":domain")
+include(":app")

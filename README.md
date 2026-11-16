@@ -145,7 +145,7 @@ campus-case/
 | 需求文档（基础功能，FR-01～17） | ✅ v1.4 | ✅ 沿用同一套（03 文档为映射） |
 | 内容设计（schema + 占位案件 + 42 条用例） | ✅ 已落地 `shared/` | ✅ 同一份，不复制 |
 | `domain/` 判定引擎 | ✅ 代码完成（待 DevEco 编译 + 跑 Hypium） | ✅ 代码完成（待 Gradle 跑 JUnit5） |
-| 工程骨架（DevEco / Gradle app 模块） | ⬜ 未开始 | 🚧 仅 `:domain` JVM 模块 |
+| 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
 | 双端一致性（fixtures 双向校验） | ✅ 用例就绪 | ✅ runner 就绪 |
@@ -165,4 +165,51 @@ cd harmony; hvigorw test
 
 `tools/validate.py` 是开发期参照实现：它跑通只代表"用例与 01 §5.3 语义一致"，**不代表两端代码已跑**。两端要各自跑通同一批 fixtures 才算 AC-18 成立。
 
-下一步建议：M1 建两个工程骨架（DevEco 工程 + Gradle `:app` 模块），把 `shared/case` → `rawfile/`、`assets/` 的复制任务接上，然后在 IDE 里把两端的 28 条单测跑到绿。
+## 6. 工程骨架（M1）
+
+### 6.1 内容同步（两端共用一份）
+
+```powershell
+powershell -File tools/sync-case.ps1          # shared/case → rawfile/case + assets/case
+powershell -File tools/sync-case.ps1 -Check   # 只比对，不一致退出码 1（AC-19 用）
+```
+
+副本目录已在 `.gitignore` 里，仓库只保留 `shared/case` 这一份源。
+
+### 6.2 鸿蒙侧（`harmony/`）
+
+DevEco Studio 直接 **File → Open → `harmony/`**：
+
+| 文件 | 作用 |
+| --- | --- |
+| `AppScope/app.json5` | bundleName `com.nacl1yan.campuscase`、版本、图标 |
+| `build-profile.json5` | 产品 `default`，`compatibleSdkVersion 5.0.0(12)`，无签名配置（本地调试自动签名） |
+| `entry/src/main/module.json5` | 入口 Ability；**没有任何权限声明**（离线约束） |
+| `entry/src/main/ets/entryability/EntryAbility.ets` | 生命周期；注释标出 M4 会接恢复流程的位置 |
+| `entry/src/main/ets/pages/Index.ets` | 骨架页：读 rawfile 内容 → 跑 `Engine` → 显示阶段/目标/进度/线索数 |
+| `entry/src/ohosTest/` | Hypium 测试模块，入口 `List.test.ets` → `Domain.test.ets` |
+
+构建与测试：`hvigorw assembleHap`、`hvigorw test`（或 DevEco 里右键 `ohosTest` → Run）。
+
+### 6.3 Android 侧（`android/`）
+
+Android Studio 直接 **Open → `android/`**：
+
+| 模块 | 作用 |
+| --- | --- |
+| `:domain` | 纯 JVM：引擎 + 内容校验 + 42 条 fixture runner（无 Android 依赖，`./gradlew :domain:test` 秒级） |
+| `:app` | Compose 壳：`MainActivity` + `LaunchScreen`（同样读 assets 内容 → 跑 `Engine` → 显示状态） |
+
+`app/build.gradle.kts` 里有 `syncCaseContent` 复制任务，挂在 `pre*Build` 上，所以构建时自动同步内容；命令行也可先用 6.1 的脚本。
+
+测试：`./gradlew :domain:test`；打包：`./gradlew :app:assembleDebug`。
+
+### 6.4 已知状态
+
+两个工程**骨架都还没在本机编译过**（这台机器只有 JDK 17 + Python，无 Gradle / Kotlin 编译器 / DevEco / Android SDK）。首次在 IDE 打开时可能需要：
+
+- Gradle：IDE 会按 `gradle-wrapper.properties` 下载 8.11.1，然后补 `./gradlew` 脚本与 `gradle-wrapper.jar`（AS 自动生成）；
+- DevEco：按提示配 SDK 路径与自动签名（`build-profile.json5` 的 `signingConfigs` 目前为空）；
+- ArkTS 侧 JSON 解析与 `TextDecoder` 的 API 名称若有出入，编译一次即可定位，不影响引擎逻辑。
+
+下一步：M3 做 UI 与 6 类动画（先鸿蒙后 Android，共用 `domain/`），M4 接持久化与杀进程恢复。
