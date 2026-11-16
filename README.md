@@ -154,6 +154,8 @@ campus-case/
 | Preferences + RDB（五表） | ✅ 快照 + 事实层 + 自动/手动存档 | ⬜ 冻结 |
 | 冷启动恢复（杀进程） | ✅ 实测停在「已完结 100%」 | ⬜ 冻结 |
 | 动画（6 类） | ✅ 转场/进度环/获得/抖动/阶段/打字机 | ⬜ 冻结 |
+| 结局收集册 | ✅ RDB `t_ending_seen` + 页面，含解锁时间 | ⬜ 冻结 |
+| 设置 / 返回键 | ✅ 动画减弱（持久化）、清空进度、关于；子页拦截返回键 | ⬜ 冻结 |
 | Hypium 用例「执行」 | ⚠️ 需在 DevEco 里点 Run（CLI 下 Hypium 不推进，见 04 文档） | — |
 
 **现在的样子**：
@@ -161,6 +163,8 @@ campus-case/
 | 简报 | 线索板 | 结局 |
 | --- | --- | --- |
 | ![简报](docs/screenshots/01-brief.jpeg) | ![线索板](docs/screenshots/02-clueboard.jpeg) | ![结局](docs/screenshots/03-ending.jpeg) |
+| **收集册** | **设置** | **恢复后** |
+| ![收集册](docs/screenshots/05-gallery.jpeg) | ![设置](docs/screenshots/06-settings.jpeg) | ![恢复](docs/screenshots/04-restored.jpeg) |
 
 ## 5. 如何验证
 
