@@ -1,71 +1,600 @@
-import util from '@ohos.util';
 import { common } from '@kit.AbilityKit';
-import { CaseLoader } from '../domain/CaseLoader';
+import { CaseFile, ClueDef, NodeState, PlayerState, Stage } from '../domain/Types';
 import { Engine } from '../domain/Engine';
-import { CaseFile, PlayerState, Stage } from '../domain/Types';
+import { GameController } from '../store/GameController';
+import { SlotInfo } from '../store/CaseDb';
+import { HudBar } from '../view/HudBar';
+import { BriefView } from '../view/BriefView';
+import { HubView, SceneCard } from '../view/HubView';
+import { HotspotItem, SceneView } from '../view/SceneView';
+import { ClueBoardView, ClueCardData } from '../view/ClueBoardView';
+import { DeduceView, ProveCard } from '../view/DeduceView';
+import { JudgeOption, JudgeView } from '../view/JudgeView';
+import { EndingView } from '../view/EndingView';
+import { SlotRow, SlotsView } from '../view/SlotsView';
 
 /**
- * M1 骨架页：只验证"内容能被读到 + 引擎能算"，不做 UI。
- * M3 会把它替换为 Launch → Brief → Hub → SceneRoom 的路由结构（01 §8.1）。
+ * 单页应用 + 视图切换（01 §8.1 页面清单的落地）。
+ * 约定：所有业务判定走 GameController → Engine；页面只做展示与事件转发。
  */
 @Entry
 @Component
 struct Index {
-  @State caseTitle: string = '（未加载内容）';
-  @State stageText: string = '-';
-  @State objective: string = '先运行 tools/sync-case.ps1 同步内容';
+  @State ready: boolean = false;
+  @State view: string = 'hub';
+  @State mirror: PlayerState = new PlayerState();
+  @State sceneId: string = '';
+  @State bodyTitle: string = '';
+  @State bodyText: string = '';
+  @State toast: string = '';
   @State progress: number = 0;
-  @State clueText: string = '0 / 0';
-  @State errors: string = '';
+  @State stageText: string = '';
+  @State objective: string = '';
+  @State clueText: string = '0 / 6';
+  @State chainBText: string = '0/3';
+  @State chainAText: string = '0/3';
+  @State readyChip: boolean = false;
+  @State savedText: string = '';
+  @State slotRows: SlotRow[] = [];
+  @State transitionFlag: boolean = false;
+
+  private controller: GameController = GameController.I;
+  private toastTimer: number = -1;
 
   aboutToAppear(): void {
-    this.load();
+    this.bootstrap();
   }
 
-  private load(): void {
-    try {
-      const context = getContext(this) as common.UIAbilityContext;
-      const bytes: Uint8Array = context.resourceManager.getRawFileContentSync('case/campus_001.json');
-      const decoder = util.TextDecoder.create('utf-8', { ignoreBOM: true });
-      const caseFile: CaseFile = CaseLoader.parse(decoder.decodeToString(bytes));
-
-      const problems: string[] = CaseLoader.validate(caseFile);
-      const state: PlayerState = Engine.initialState(caseFile);
-
-      this.caseTitle = caseFile.title;
-      this.stageText = state.stage;
-      this.objective = Engine.nextObjective(state, caseFile);
-      this.progress = Engine.computeProgress(state, caseFile);
-      this.clueText = `${state.ownedClues.length} / ${caseFile.clues.length}`;
-      this.errors = problems.length === 0 ? '内容校验通过' : problems.join('; ');
-    } catch (e) {
-      this.objective = '内容未同步：请在仓库根执行 tools/sync-case.ps1';
-      this.errors = `${e}`;
+  aboutToDisappear(): void {
+    if (this.toastTimer !== -1) {
+      clearInterval(this.toastTimer);
+      this.toastTimer = -1;
     }
   }
 
+  private async bootstrap(): Promise<void> {
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      await this.controller.init(context);
+      this.ready = true;
+      this.refresh();
+      if (this.mirror.stage === Stage.FINISHED) {
+        this.view = 'ending';
+      } else if (this.mirror.stage === Stage.PROLOGUE || this.mirror.stage === Stage.ACCEPT) {
+        this.view = 'brief';
+      } else {
+        this.view = 'hub';
+      }
+      this.getUIContext().animateTo({ duration: 240, curve: Curve.EaseOut }, () => {
+        this.transitionFlag = true;
+      });
+    } catch (e) {
+      this.toast = `初始化失败：${e}`;
+    }
+  }
+
+  private caseFile(): CaseFile {
+    return this.controller.requireCase();
+  }
+
+  /** 统一刷新：把 controller 的状态镜像到 @State，驱动 HUD 与各页重渲染。 */
+  private refresh(): void {
+    this.mirror = this.controller.state;
+    this.progress = this.controller.progress();
+    this.stageText = this.controller.stageLabel();
+    this.objective = this.controller.objective();
+    this.clueText = `${this.controller.clueCount()} / ${this.controller.clueTotal()}`;
+    const bChain = this.caseFile().chains.find((c) => c.id === 'CH-B');
+    const aChain = this.caseFile().chains.find((c) => c.id === 'CH-A');
+    this.chainBText = bChain === undefined ? '-' :
+      `${this.controller.chainProgress('CH-B')}/${this.controller.chainSize('CH-B')}`;
+    this.chainAText = aChain === undefined ? '-' :
+      `${this.controller.chainProgress('CH-A')}/${this.controller.chainSize('CH-A')}`;
+    this.readyChip = this.controller.anyChainReady();
+    const stamp = new Date();
+    this.savedText = `已保存 ${stamp.getHours().toString().padStart(2, '0')}:${stamp.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  private showToast(text: string): void {
+    this.toast = text;
+    if (this.toastTimer !== -1) {
+      clearInterval(this.toastTimer);
+    }
+    this.toastTimer = setInterval(() => {
+      this.toast = '';
+      if (this.toastTimer !== -1) {
+        clearInterval(this.toastTimer);
+        this.toastTimer = -1;
+      }
+    }, 2200);
+  }
+
+  private nav(view: string): void {
+    this.getUIContext().animateTo({ duration: 160, curve: Curve.EaseIn }, () => {
+      this.transitionFlag = false;
+    });
+    this.view = view;
+    this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => {
+      this.transitionFlag = true;
+    });
+  }
+
+  // ---------------------------------------------------------------- 数据组装
+
+  private sceneCards(): SceneCard[] {
+    const state = this.mirror;
+    return this.caseFile().scenes.map((scene) => {
+      const available = Engine.isSceneAvailable(state, scene);
+      const total = scene.hotspots.length;
+      let done = 0;
+      scene.hotspots.forEach((h) => {
+        if (state.appliedNodes.includes(h.nodeId)) {
+          done += 1;
+        }
+      });
+      return new SceneCard(scene.id, scene.name, scene.desc, !available, `已查 ${done}/${total}`);
+    });
+  }
+
+  private hotspotItems(): HotspotItem[] {
+    const state = this.mirror;
+    const caseFile = this.caseFile();
+    const scene = caseFile.scenes.find((s) => s.id === this.sceneId);
+    if (scene === undefined) {
+      return [];
+    }
+    return scene.hotspots.map((h) => {
+      const node = caseFile.nodes.find((n) => n.id === h.nodeId);
+      const title = node === undefined ? h.nodeId : node.title;
+      const nodeState: string = Engine.nodeState(state, caseFile, h.nodeId);
+      const done = nodeState === NodeState.DONE;
+      const hint = node === undefined ? '' : (h.lockedHint ?? '还需要更多现场信息');
+      return new HotspotItem(h.nodeId, title, nodeState, hint, done);
+    });
+  }
+
+  private clueCards(): ClueCardData[] {
+    const state = this.mirror;
+    const caseFile = this.caseFile();
+    const linkedFlags: string[] = [];
+    caseFile.rules.forEach((rule) => {
+      if (state.flags.get(rule.grantsFlag) === true) {
+        linkedFlags.push(rule.grantsFlag);
+      }
+    });
+    return caseFile.clues.map((clue: ClueDef) => {
+      const owned = state.ownedClues.includes(clue.id);
+      let linked = false;
+      caseFile.rules.forEach((rule) => {
+        if (rule.inputs.includes(clue.id) && linkedFlags.includes(rule.grantsFlag)) {
+          linked = true;
+        }
+      });
+      const typeLabel = clue.type === 'PHYSICAL' ? '物证' : (clue.type === 'TESTIMONY' ? '证言' : '时间线');
+      return new ClueCardData(clue.id, clue.name, typeLabel, clue.desc,
+        clue.hintWhenMissing ?? '还需要更多现场信息', owned, linked);
+    });
+  }
+
+  private proveCards(): ProveCard[] {
+    const state = this.mirror;
+    const caseFile = this.caseFile();
+    return caseFile.proveStages.map((p) => new ProveCard(
+      p.id, p.question, Engine.canPublic(state) || Engine.canPrivate(state) ? '证据链已成立' : '还差一步',
+      state.passedStages.includes(p.id), p.hints ?? [], state.ownedClues.slice().sort()
+    ));
+  }
+
+  private clueIds(): string[] {
+    return this.caseFile().clues.map((c) => c.id);
+  }
+
+  private clueNames(): string[] {
+    return this.caseFile().clues.map((c) => c.name);
+  }
+
+  private judgeOptions(): JudgeOption[] {
+    const state = this.mirror;
+    const caseFile = this.caseFile();
+    return caseFile.finalChoices.map((choice) => {
+      const available = choice.requiresFlag === 'proofB' ? Engine.canPublic(state) : Engine.canPrivate(state);
+      const need = caseFile.chains.find((c) => c.passFlagId === choice.requiresFlag);
+      const have = need === undefined ? 0 : this.controller.chainProgress(need.id);
+      const total = need === undefined ? 0 : need.clueIds.length;
+      return new JudgeOption(choice.id, choice.label, available,
+        available ? '' : `证据链不完整：${need?.name ?? '线索'} ${have}/${total}`);
+    });
+  }
+
+  private endingName(): string {
+    const state = this.mirror;
+    const found = this.caseFile().endings.find((e) => e.id === state.endingId);
+    return found === undefined ? '未知结局' : found.name;
+  }
+
+  private endingSegments(): string[] {
+    const state = this.mirror;
+    const found = this.caseFile().endings.find((e) => e.id === state.endingId);
+    return found === undefined ? [] : found.segments;
+  }
+
+  private async reloadSlots(): Promise<void> {
+    const slots: SlotInfo[] = await this.controller.listSlots();
+    const rows: SlotRow[] = [];
+    rows.push(new SlotRow(0, '自动存档',
+      slots.find((s) => s.slotId === 0) === undefined ? '' :
+        `${slots.find((s) => s.slotId === 0)?.stage ?? ''} · 线索 ${slots.find((s) => s.slotId === 0)?.clueCount ?? 0}`,
+      slots.find((s) => s.slotId === 0) === undefined));
+    for (let i = 1; i <= 3; i++) {
+      const hit = slots.find((s) => s.slotId === i);
+      rows.push(new SlotRow(i, `存档槽 ${i}`,
+        hit === undefined ? '' : `${hit.stage} · 线索 ${hit.clueCount} · seq ${hit.seq}`, hit === undefined));
+    }
+    this.slotRows = rows;
+  }
+
+  // ---------------------------------------------------------------- 事件
+
+  private async acceptCase(): Promise<void> {
+    try {
+      console.info('[campus] acceptCase start');
+      const result = await this.controller.applyNode('N01');
+      console.info(`[campus] acceptCase apply ok=${result.ok} err=${result.error ?? ''}`);
+      if (!result.ok) {
+        this.showToast(`接受委托失败：${result.error ?? '未知原因'}`);
+        return;
+      }
+      this.refresh();
+      this.nav('hub');
+      try {
+        await this.controller.autoSave();
+      } catch (e) {
+        console.error(`[campus] autoSave failed: ${e}`);
+      }
+    } catch (e) {
+      console.error(`[campus] acceptCase threw: ${e}`);
+      this.showToast(`异常：${e}`);
+    }
+  }
+
+  private async enterScene(sceneId: string): Promise<void> {
+    this.sceneId = sceneId;
+    this.bodyTitle = '';
+    this.bodyText = '';
+    this.nav('scene');
+  }
+
+  private async tapHotspot(nodeId: string): Promise<void> {
+    const caseFile = this.caseFile();
+    const node = caseFile.nodes.find((n) => n.id === nodeId);
+    const nodeState = Engine.nodeState(this.mirror, caseFile, nodeId);
+    if (nodeState === NodeState.LOCKED) {
+      this.showToast(node?.unlockCond === undefined ? '还不能调查这里' : `还差些条件：${this.describeCond(nodeId)}`);
+      return;
+    }
+    if (nodeState === NodeState.CLOSED) {
+      this.showToast('这里已经被你之前的选择封死了');
+      return;
+    }
+    if (nodeState === NodeState.DONE) {
+      this.bodyTitle = node?.title ?? '';
+      this.bodyText = node?.body ?? '';
+      return;
+    }
+    const beforeClues = this.mirror.ownedClues.length;
+    const result = await this.controller.applyNode(nodeId);
+    if (!result.ok) {
+      this.showToast(`调查失败：${result.error ?? ''}`);
+      return;
+    }
+    this.bodyTitle = node?.title ?? '';
+    this.bodyText = node?.body ?? '';
+    this.refresh();
+    if (this.mirror.ownedClues.length > beforeClues) {
+      this.showToast(`获得线索（${this.mirror.ownedClues.length}/${this.controller.clueTotal()}）`);
+    }
+    if (this.mirror.stage === Stage.DEDUCE) {
+      this.showToast('进入验证阶段：去推理工坊');
+    }
+    await this.controller.autoSave();
+  }
+
+  private describeCond(nodeId: string): string {
+    const node = this.caseFile().nodes.find((n) => n.id === nodeId);
+    if (node === undefined) {
+      return '条件未知';
+    }
+    const cond = node.unlockCond;
+    const parts: string[] = [];
+    (cond.allClues ?? []).forEach((id: string) => {
+      const clue = this.caseFile().clues.find((c) => c.id === id);
+      parts.push(clue === undefined ? id : clue.name);
+    });
+    (cond.allFlags ?? []).forEach((flag: string) => parts.push(flag));
+    return parts.length === 0 ? '还不清楚' : parts.join('、');
+  }
+
+  private async linkClues(a: string, b: string): Promise<void> {
+    const outcome = await this.controller.linkClues(a, b);
+    this.refresh();
+    if (!outcome.ok) {
+      this.showToast(outcome.reason === 'SAME_CLUE' ? '不能和自己连线' :
+        (outcome.reason === 'NOT_OWNED' ? '还没拿到这两条线索' : '这两条线索没有直接关系'));
+      return;
+    }
+    this.showToast('线索连上了：一条结论成立');
+    await this.controller.autoSave();
+  }
+
+  private async submitProof(stageId: string, picked: string[]): Promise<void> {
+    const ok = await this.controller.submitProof(stageId, picked);
+    this.refresh();
+    this.showToast(ok ? '结论成立，证据链推进了' : '这个组合不成立，换个角度（提示不扣分）');
+    if (ok) {
+      await this.controller.autoSave();
+    }
+  }
+
+  private async openJudge(): Promise<void> {
+    const result = await this.controller.enterJudge();
+    if (!result.ok) {
+      this.showToast('证据还不足：先去线索板把链补全');
+      return;
+    }
+    this.refresh();
+    this.nav('judge');
+  }
+
+  private async chooseFinal(choiceId: string): Promise<void> {
+    const result = await this.controller.chooseFinal(choiceId);
+    if (!result.ok) {
+      this.showToast('这个判断不被接受（证据链不完整）');
+      return;
+    }
+    const finished = await this.controller.finish();
+    if (finished.ok) {
+      await this.controller.autoSave();
+    }
+    this.refresh();
+    this.nav('ending');
+  }
+
+  private async restartGame(): Promise<void> {
+    await this.controller.restart();
+    this.refresh();
+    this.nav('brief');
+    this.showToast('已重开本局');
+  }
+
+  private askRestart(): void {
+    this.getUIContext().showAlertDialog({
+      title: '重开本局',
+      message: '会清空当前进度（存档槽保留），确定吗？',
+      primaryButton: {
+        value: '取消',
+        action: () => {
+        },
+      },
+      secondaryButton: {
+        value: '重开',
+        fontColor: '#B3261E',
+        action: () => {
+          this.restartGame();
+        },
+      },
+    });
+  }
+
+  private async openSlots(): Promise<void> {
+    await this.reloadSlots();
+    this.nav('slots');
+  }
+
+  private async saveSlot(slotId: number): Promise<void> {
+    await this.controller.saveSlot(slotId, `存档槽 ${slotId}`);
+    await this.reloadSlots();
+    this.showToast(`已存入槽 ${slotId}`);
+  }
+
+  private async loadSlot(slotId: number): Promise<void> {
+    const ok = await this.controller.loadSlot(slotId);
+    await this.reloadSlots();
+    this.refresh();
+    if (ok) {
+      this.showToast('已读档，回到存档时刻');
+      this.view = this.mirror.stage === Stage.FINISHED ? 'ending' : 'hub';
+    } else {
+      this.showToast('读档失败：槽内数据不可用');
+    }
+  }
+
+  private async deleteSlot(slotId: number): Promise<void> {
+    await this.controller.deleteSlot(slotId);
+    await this.reloadSlots();
+    this.showToast('存档已删除');
+  }
+
+  // ---------------------------------------------------------------- UI
+
   build() {
-    Column({ space: 12 }) {
-      Text(this.caseTitle)
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-      Text(`阶段：${this.stageText}`)
-        .fontSize(16)
-      Text(`目标：${this.objective}`)
-        .fontSize(16)
-      Text(`进度：${this.progress}%`)
-        .fontSize(16)
-      Text(`线索：${this.clueText}`)
-        .fontSize(16)
-      Text(this.errors)
-        .fontSize(13)
-        .fontColor('#B3261E')
-        .maxLines(6)
+    Column() {
+      if (!this.ready) {
+        Column({ space: 10 }) {
+          LoadingProgress().width(48).height(48)
+          Text('正在读取案件与进度…').fontSize(13).fontColor('#6B7280')
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+      } else {
+        HudBar({
+          stageText: this.stageText,
+          objective: this.objective,
+          clueText: this.clueText,
+          progress: this.progress,
+          chainBText: this.chainBText,
+          chainAText: this.chainAText,
+          ready: this.readyChip && this.mirror.stage !== Stage.FINISHED,
+          savedText: this.savedText,
+          showBack: this.view === 'scene' || this.view === 'board' ||
+            this.view === 'deduce' || this.view === 'slots',
+          onBack: () => this.nav('hub'),
+          onBoard: () => this.nav('board'),
+          onSlots: () => {
+            this.openSlots();
+          },
+          onRestart: () => this.askRestart(),
+        })
+
+        Column() {
+          if (this.view === 'brief') {
+            BriefView({
+              title: this.caseFile().title,
+              subtitle: this.caseFile().subtitle ?? '',
+              client: this.caseFile().brief.client,
+              summary: this.caseFile().brief.summary,
+              objectives: this.caseFile().brief.objectives,
+              timeline: (this.caseFile().brief.timeline ?? []).map((t) => `${t.time}  ${t.text}`),
+              accepted: this.mirror.stage !== Stage.PROLOGUE && this.mirror.stage !== Stage.ACCEPT,
+              onAccept: () => {
+                this.acceptCase();
+              },
+              onEnter: () => this.nav('hub'),
+            })
+          } else if (this.view === 'hub') {
+            HubView({
+              cards: this.sceneCards(),
+              onEnter: (sceneId: string) => {
+                this.enterScene(sceneId);
+              },
+              onBoard: () => this.nav('board'),
+            })
+          } else if (this.view === 'scene') {
+            SceneView({
+              sceneName: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.name ?? '',
+              sceneDesc: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.desc ?? '',
+              hotspots: this.hotspotItems(),
+              bodyTitle: this.bodyTitle,
+              bodyText: this.bodyText,
+              onTap: (nodeId: string) => {
+                this.tapHotspot(nodeId);
+              },
+            })
+          } else if (this.view === 'board') {
+            ClueBoardView({
+              cards: this.clueCards(),
+              chainBText: this.chainBText,
+              chainAText: this.chainAText,
+              canDeduce: this.mirror.stage === Stage.DEDUCE || this.readyChip,
+              links: [],
+              onLink: (a: string, b: string) => {
+                this.linkClues(a, b);
+              },
+              onDeduce: () => this.nav('deduce'),
+            })
+          } else if (this.view === 'deduce') {
+            DeduceView({
+              cards: this.proveCards(),
+              clueIds: this.clueIds(),
+              clueNames: this.clueNames(),
+              onSubmit: (stageId: string, picked: string[]) => {
+                this.submitProof(stageId, picked);
+              },
+            })
+          } else if (this.view === 'judge') {
+            JudgeView({
+              options: this.judgeOptions(),
+              ready: this.readyChip && this.mirror.stage !== Stage.FINISHED,
+              onChoose: (choiceId: string) => {
+                this.chooseFinal(choiceId);
+              },
+            })
+          } else if (this.view === 'ending') {
+            EndingView({
+              endingName: this.endingName(),
+              segments: this.endingSegments(),
+              onRestart: () => {
+                this.restartGame();
+              },
+              onHome: () => {
+                this.restartGame();
+              },
+            })
+          } else if (this.view === 'slots') {
+            SlotsView({
+              rows: this.slotRows,
+              canSave: this.mirror.stage !== Stage.PROLOGUE,
+              onSave: (slotId: number) => {
+                this.saveSlot(slotId);
+              },
+              onLoad: (slotId: number) => {
+                this.loadSlot(slotId);
+              },
+              onDelete: (slotId: number) => {
+                this.deleteSlot(slotId);
+              },
+              onRestart: () => this.askRestart(),
+            })
+          }
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .opacity(this.transitionFlag ? 1 : 0.2)
+        .animation({ duration: 220, curve: Curve.EaseOut })
+
+        if (this.view !== 'ending') {
+          Row({ space: 10 }) {
+            Button('线索板')
+            .layoutWeight(1)
+            .height(44)
+            .fontSize(14)
+            .backgroundColor('#EEF2F7')
+            .fontColor('#26324A')
+            .onClick(() => this.nav('board'))
+          Button('推理工坊')
+            .layoutWeight(1)
+            .height(44)
+            .fontSize(14)
+            .backgroundColor('#EEF2F7')
+            .fontColor('#26324A')
+            .onClick(() => this.nav('deduce'))
+          Button(this.readyChip ? '去判断' : '判断')
+            .layoutWeight(1)
+            .height(44)
+            .fontSize(14)
+            .backgroundColor(this.readyChip ? '#B3261E' : '#E5E7EB')
+            .fontColor(this.readyChip ? '#FFFFFF' : '#9CA3AF')
+            .onClick(() => {
+              if (this.readyChip) {
+                this.openJudge();
+              } else {
+                this.showToast('证据链还没成立，先去把线索连起来');
+              }
+            })
+        }
+        .width('100%')
+          .padding({ left: 16, right: 16, top: 8, bottom: 12 })
+          .backgroundColor('#FFFFFF')
+          .border({ width: { top: 1 }, color: '#E5E7EB' })
+        }
+      }
+
+      if (this.toast.length > 0) {
+        Text(this.toast)
+          .fontSize(13)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#374151')
+          .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+          .borderRadius(20)
+          .margin({ bottom: 90 })
+          .transition(TransitionEffect.asymmetric(
+            TransitionEffect.OPACITY.animation({ duration: 200 }),
+            TransitionEffect.OPACITY.animation({ duration: 200 })),
+          )
+      }
     }
     .width('100%')
     .height('100%')
-    .padding(24)
-    .alignItems(HorizontalAlign.Start)
-    .justifyContent(FlexAlign.Center)
+    .backgroundColor('#FDFDFD')
   }
 }

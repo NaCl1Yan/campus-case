@@ -1,68 +1,70 @@
 {
   "id": "campus_001",
-  "title": "（占位案件）广播站母带失窃",
-  "subtitle": "占位内容 · 用于跑通引擎与双端一致性，不含正式剧情",
+  "title": "钟楼七点",
+  "subtitle": "校庆前夜的失窃母带",
   "contentVersion": 1,
   "brief": {
-    "client": "（占位）匿名委托人",
-    "summary": "占位说明：校庆前夜成品母带失窃，玩家作为推理社成员介入调查。",
+    "client": "推理社 · 匿名委托",
+    "summary": "校庆前夜 21:40，学生会广播站为校庆准备的唯一成品母带《七点钟声》失窃。站长苏晚被指交接失职，面临停职。推理社接到匿名委托，请你在校庆前把它找回来。",
     "objectives": [
-      "查清谁在 21:30 前后进入过广播站",
-      "查清拿走母带的动机",
+      "查清 21:30 前后谁第二次进了广播站",
+      "查清拿走母带的人想要什么",
       "在证据链成立后作出最终判断"
     ],
     "timeline": [
-      { "time": "20:55", "text": "（占位）母带放入铁柜" },
-      { "time": "21:30", "text": "（占位）门禁出现一次刷卡记录" },
-      { "time": "21:40", "text": "（占位）发现铁柜已空" }
+      { "time": "20:55", "text": "苏晚把母带放进铁柜，登记表写 21:00 交接" },
+      { "time": "21:10", "text": "实验楼器材室钥匙卡被取用（登记本有记录）" },
+      { "time": "21:30", "text": "广播站门禁有一次刷卡记录，登记表此处被涂改" },
+      { "time": "21:40", "text": "值班学生发现铁柜已空，母带失踪" },
+      { "time": "21:55", "text": "陈墨出现在旧钟楼（无人证，仅群聊提到）" }
     ]
   },
 
   "scenes": [
     {
       "id": "S1",
-      "name": "（占位）图书馆旧报刊区",
-      "desc": "占位场景说明 S1",
+      "name": "图书馆 · 旧报刊区",
+      "desc": "台灯只亮了一排，靠窗那排桌上摊着学生会往年的登记册。",
       "unlockCond": {},
       "enterFx": "warm",
       "hotspots": [
-        { "id": "H1_1", "nodeId": "N01", "x": 500, "y": 620, "r": 90 },
-        { "id": "H1_2", "nodeId": "N02", "x": 300, "y": 400, "r": 80 },
-        { "id": "H1_3", "nodeId": "N07", "x": 720, "y": 430, "r": 80 }
+        { "id": "H1_1", "nodeId": "N01", "x": 500, "y": 640, "r": 95, "lockedHint": "先看看委托说明" },
+        { "id": "H1_2", "nodeId": "N02", "x": 300, "y": 420, "r": 85, "lockedHint": "还没拿到授权，登记册不给你翻" },
+        { "id": "H1_3", "nodeId": "N07", "x": 730, "y": 450, "r": 85, "lockedHint": "自习区的书页好像夹着什么，但还缺理由翻它" }
       ]
     },
     {
       "id": "S2",
-      "name": "（占位）实验楼器材室",
-      "desc": "占位场景说明 S2",
+      "name": "实验楼 · 器材室走廊",
+      "desc": "冷白的日光灯管在头顶嗡嗡响，墙上是生锈的取用登记本。",
       "unlockCond": { "allClues": ["C2"] },
       "enterFx": "cold",
       "hotspots": [
-        { "id": "H2_1", "nodeId": "N03", "x": 420, "y": 500, "r": 85 },
-        { "id": "H2_2", "nodeId": "N04", "x": 640, "y": 520, "r": 85 }
+        { "id": "H2_1", "nodeId": "N03", "x": 420, "y": 520, "r": 90, "lockedHint": "得先知道该查哪把钥匙" },
+        { "id": "H2_2", "nodeId": "N04", "x": 650, "y": 540, "r": 90, "lockedHint": "钥匙卡就在门后" }
       ]
     },
     {
       "id": "S3",
-      "name": "（占位）广播站",
-      "desc": "占位场景说明 S3",
+      "name": "学生会办公室 · 广播站",
+      "desc": "铁柜敞着一条缝，调音台的推子停在半格，公告栏上钉着节目单。",
       "unlockCond": { "allClues": ["C1"] },
       "enterFx": "neon",
       "hotspots": [
-        { "id": "H3_1", "nodeId": "N05", "x": 350, "y": 380, "r": 80 },
-        { "id": "H3_2", "nodeId": "N06", "x": 610, "y": 400, "r": 80 },
-        { "id": "H3_3", "nodeId": "N08", "x": 500, "y": 680, "r": 80 },
-        { "id": "H3_4", "nodeId": "N10", "x": 200, "y": 700, "r": 70 }
+        { "id": "H3_1", "nodeId": "N05", "x": 350, "y": 380, "r": 85, "lockedHint": "铁柜空了，但别处还有痕迹" },
+        { "id": "H3_2", "nodeId": "N06", "x": 620, "y": 400, "r": 85, "lockedHint": "调音台的缓存需要一点现场知识才看得懂" },
+        { "id": "H3_3", "nodeId": "N08", "x": 500, "y": 690, "r": 85, "lockedHint": "公告栏上的草稿，先得有能对照的东西" },
+        { "id": "H3_4", "nodeId": "N10", "x": 200, "y": 700, "r": 75, "lockedHint": "线索还不够摊开一张桌子" }
       ]
     },
     {
       "id": "S4",
-      "name": "（占位）旧钟楼老播音间",
-      "desc": "占位场景说明 S4（条件解锁场景）",
+      "name": "旧钟楼 · 老播音间",
+      "desc": "木楼梯尽头是一间还在用的话筒间，钟摆在玻璃后面走得很慢。",
       "unlockCond": { "allClues": ["C4"] },
       "enterFx": "dim",
       "hotspots": [
-        { "id": "H4_1", "nodeId": "N09", "x": 500, "y": 450, "r": 100 }
+        { "id": "H4_1", "nodeId": "N09", "x": 500, "y": 470, "r": 105, "lockedHint": "你知道有人来过这里，但不知道他藏了什么" }
       ]
     }
   ],
@@ -72,7 +74,7 @@
       "id": "N01",
       "sceneId": "S1",
       "title": "接受调查",
-      "body": "（占位）接下这桩案子。",
+      "body": "委托只有一句话：「校庆前夜，广播站丢了东西。别让苏晚背这个锅。」你把推理社的徽章别在包上，翻开了第一本登记册。",
       "unlockCond": {},
       "effect": { "stage": "EXPLORE", "setFlags": [["accepted", true]] },
       "repeatable": false
@@ -81,7 +83,7 @@
       "id": "N02",
       "sceneId": "S1",
       "title": "值班表上的涂改",
-      "body": "（占位）登记表的时间被改过。",
+      "body": "21:30 那一栏被改成了 21:00，笔迹比旁边的登记人更细。你对着灯看：底下那层数字还压着，是 21:30。",
       "unlockCond": { "allFlags": ["accepted"] },
       "effect": { "grantClues": ["C2"], "unlockScenes": ["S2"], "setFlags": [["ledgerChecked", true]] }
     },
@@ -89,7 +91,7 @@
       "id": "N03",
       "sceneId": "S2",
       "title": "器材室的取用登记",
-      "body": "（占位）找实验员核对借用记录。",
+      "body": "实验员翻出登记本：「21:10 有人借了钥匙卡，签的是广播站的名义。」他把卡递给你，卡面蹭着一层白色粉末。",
       "unlockCond": { "allClues": ["C2"] },
       "effect": { "grantClues": ["C1"], "unlockScenes": ["S3"], "setFlags": [["registered", true]] },
       "exclusiveWith": ["N04"]
@@ -98,7 +100,7 @@
       "id": "N04",
       "sceneId": "S2",
       "title": "撬开器材室",
-      "body": "（占位）直接撬锁取卡。",
+      "body": "门锁比想象中松。你摸到钥匙卡时，走廊尽头的门响了一声——有人看见你进来了。第二天，学生会办公室的门对你锁上了。",
       "unlockCond": { "allClues": ["C2"] },
       "effect": {
         "grantClues": ["C1"],
@@ -111,8 +113,8 @@
     {
       "id": "N05",
       "sceneId": "S3",
-      "title": "内部群的删除消息",
-      "body": "（占位）被删掉的那条消息还留在通知里。",
+      "title": "内部群里的删除消息",
+      "body": "铁柜空了，但电脑上的群聊还留着一行灰字：「十点，钟楼见，东西我带走了。」头像被裁掉了，只剩半个校徽。",
       "unlockCond": { "allClues": ["C2"], "noneFlags": ["breached"] },
       "effect": { "grantClues": ["C4"], "unlockScenes": ["S4"] }
     },
@@ -120,7 +122,7 @@
       "id": "N06",
       "sceneId": "S3",
       "title": "被剪掉的录音",
-      "body": "（占位）调音台缓存里有一段被剪掉的音频。",
+      "body": "调音台的缓存里有一段被剪过的音频：21:32，40 秒的空白，空白里能听见旧钟楼整点的钟声。",
       "unlockCond": { "anyClues": ["C1", "C2"] },
       "effect": { "grantClues": ["C3"] }
     },
@@ -128,15 +130,15 @@
       "id": "N07",
       "sceneId": "S1",
       "title": "未寄出的道歉信",
-      "body": "（占位）夹在书页里的信。",
+      "body": "自习区的书页里夹着一封信，信封上没贴邮票：「陈墨，第 7 个节目我保下来了，别做傻事。」署名是苏晚。",
       "unlockCond": { "allClues": ["C4"] },
       "effect": { "grantClues": ["C5"] }
     },
     {
       "id": "N08",
       "sceneId": "S3",
-      "title": "节目单草稿",
-      "body": "（占位）红笔划掉了第 7 个节目。",
+      "title": "校庆节目单草稿",
+      "body": "草稿上第 7 个节目被红笔划掉，旁边一行小字：「陈墨 · 替补」。可这张是校内传阅版，不是最终版。",
       "unlockCond": { "allClues": ["C3"] },
       "effect": { "grantClues": ["C6"] }
     },
@@ -144,15 +146,15 @@
       "id": "N09",
       "sceneId": "S4",
       "title": "老播音间的母带",
-      "body": "（占位）收音机暗格里找到了母带。",
+      "body": "收音机后面的暗格里，母带还在，外壳上贴着「七点钟声 · 正式」。旁边是没拆封的合播稿，两个人的名字并排写着。",
       "unlockCond": { "allClues": ["C5"] },
       "effect": { "setFlags": [["tapeFound", true]] }
     },
     {
       "id": "N10",
       "sceneId": "S3",
-      "title": "进入推理工坊",
-      "body": "（占位）把线索摊开，开始验证。",
+      "title": "把线索摊开",
+      "body": "你把认得的东西摆了一桌：时间、钥匙、录音、一封信。接下来要说的是话，不是运气。",
       "unlockCond": { "anyClues": ["C1", "C2", "C3"] },
       "effect": { "stage": "DEDUCE" }
     },
@@ -160,7 +162,7 @@
       "id": "N11",
       "sceneId": "S3",
       "title": "作出最终判断",
-      "body": "（占位）判断不可撤销。",
+      "body": "校庆的灯已经挂上了。你手里的东西足够毁掉一个人，也足够救回一个晚上。",
       "unlockCond": { "anyFlags": ["proofA", "proofB"] },
       "effect": { "stage": "ENDING" }
     },
@@ -168,25 +170,85 @@
       "id": "N12",
       "sceneId": "S3",
       "title": "结局登记",
-      "body": "（占位）收录进结局册。",
+      "body": "这一晚被你写进推理社的记录里，编号 001。",
       "unlockCond": { "anyFlags": ["proofA", "proofB"] },
       "effect": { "stage": "FINISHED" }
     }
   ],
 
   "clues": [
-    { "id": "C1", "name": "沾着白粉的钥匙卡", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）实验楼器材室钥匙卡。", "hintWhenMissing": "去实验楼方向看看" },
-    { "id": "C2", "name": "值班表上的涂改", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）时间被改过。", "hintWhenMissing": "图书馆的旧登记表" },
-    { "id": "C3", "name": "被剪掉的录音", "type": "PHYSICAL", "chainId": "CH-B", "desc": "（占位）缓存音频缺失 40 秒。", "hintWhenMissing": "广播站的调音台" },
-    { "id": "C4", "name": "内部群的删除消息", "type": "TESTIMONY", "chainId": "CH-A", "desc": "（占位）一条被删的约见消息。", "hintWhenMissing": "广播站的电脑" },
-    { "id": "C5", "name": "未寄出的道歉信", "type": "TESTIMONY", "chainId": "CH-A", "desc": "（占位）写给某人的信。", "hintWhenMissing": "图书馆自习区" },
-    { "id": "C6", "name": "节目单草稿", "type": "PHYSICAL", "chainId": "CH-A", "desc": "（占位）第 7 个节目被划掉。", "hintWhenMissing": "公告栏上的草稿" }
+    {
+      "id": "C1",
+      "name": "沾着白粉的钥匙卡",
+      "type": "PHYSICAL",
+      "chainId": "CH-B",
+      "desc": "实验楼器材室的钥匙卡，卡面蹭着一层白色碳酸钙粉。取用记录 21:10，签名是广播站的名义。",
+      "hintWhenMissing": "去实验楼方向看看"
+    },
+    {
+      "id": "C2",
+      "name": "值班表上的涂改",
+      "type": "PHYSICAL",
+      "chainId": "CH-B",
+      "desc": "21:30 被改写成 21:00，底下压着原始的 21:30。笔迹与登记人不同。",
+      "hintWhenMissing": "图书馆的旧登记表"
+    },
+    {
+      "id": "C3",
+      "name": "被剪掉的录音",
+      "type": "PHYSICAL",
+      "chainId": "CH-B",
+      "desc": "调音台缓存里 21:32 起有 40 秒被剪掉，空白中能听见旧钟楼整点钟声。",
+      "hintWhenMissing": "广播站的调音台"
+    },
+    {
+      "id": "C4",
+      "name": "内部群的删除消息",
+      "type": "TESTIMONY",
+      "chainId": "CH-A",
+      "desc": "「十点，钟楼见，东西我带走了。」头像被裁掉，只剩半个校徽。",
+      "hintWhenMissing": "广播站里的那台电脑"
+    },
+    {
+      "id": "C5",
+      "name": "未寄出的道歉信",
+      "type": "TESTIMONY",
+      "chainId": "CH-A",
+      "desc": "苏晚写给陈墨：「第 7 个节目我保下来了，别做傻事。」信没贴邮票。",
+      "hintWhenMissing": "图书馆自习区的书页"
+    },
+    {
+      "id": "C6",
+      "name": "校庆节目单草稿",
+      "type": "PHYSICAL",
+      "chainId": "CH-A",
+      "desc": "第 7 个节目被红笔划掉，旁注「陈墨 · 替补」。这是校内传阅版，不是最终版。",
+      "hintWhenMissing": "公告栏上的草稿"
+    }
   ],
 
   "rules": [
-    { "id": "R1", "inputs": ["C1", "C2"], "chainId": "CH-B", "grantsFlag": "link.b1", "conclusion": "（占位）进入者来自实验楼方向，不是站长。" },
-    { "id": "R2", "inputs": ["C2", "C3"], "chainId": "CH-B", "grantsFlag": "link.b2", "conclusion": "（占位）剪辑发生在 21:30 之后。" },
-    { "id": "R3", "inputs": ["C5", "C6"], "chainId": "CH-A", "grantsFlag": "link.a1", "conclusion": "（占位）他看到的信息与真相相反。" }
+    {
+      "id": "R1",
+      "inputs": ["C1", "C2"],
+      "chainId": "CH-B",
+      "grantsFlag": "link.b1",
+      "conclusion": "钥匙卡 21:10 被取用，门禁 21:30 却有一次刷卡 —— 进广播站的人是从实验楼方向来的，不是苏晚。"
+    },
+    {
+      "id": "R2",
+      "inputs": ["C2", "C3"],
+      "chainId": "CH-B",
+      "grantsFlag": "link.b2",
+      "conclusion": "被剪掉的 40 秒里能听见整点钟声 —— 剪辑发生在 21:30 之后，而且靠近旧钟楼。"
+    },
+    {
+      "id": "R3",
+      "inputs": ["C5", "C6"],
+      "chainId": "CH-A",
+      "grantsFlag": "link.a1",
+      "conclusion": "信里说「第 7 个节目我保下来了」，可陈墨看到的是被划掉的传阅版 —— 他以为自己的节目没了。"
+    }
   ],
 
   "chains": [
@@ -209,43 +271,61 @@
   "proveStages": [
     {
       "id": "P1",
-      "question": "（占位）谁第二次进了广播站？",
+      "question": "21:30 第二次进广播站的人，是怎么进去的？",
       "slots": 2,
       "poolCond": { "anyClues": ["C1", "C2", "C3"] },
       "answer": ["C1", "C2"],
       "onPass": { "setFlags": [["proofB", true]] },
-      "hints": ["先看时间对不对得上", "再看进入者从哪来"]
+      "hints": ["先看时间对不对得上", "再看进入者从哪里来"]
     },
     {
       "id": "P2",
-      "question": "（占位）他为什么拿走母带？",
+      "question": "他为什么要把母带藏起来？",
       "slots": 2,
       "poolCond": { "anyClues": ["C4", "C5", "C6"] },
       "answer": ["C5", "C6"],
       "onPass": { "setFlags": [["proofA", true]] },
-      "hints": ["信里说了什么", "节目单被谁动过"]
+      "hints": ["信里到底说了什么", "节目单被谁动过"]
     }
   ],
 
   "endings": [
     {
       "id": "E-A",
-      "name": "（占位结局 A）七点钟声",
+      "name": "《七点钟声》",
       "choiceId": "PRIVATE",
       "requires": { "allFlags": ["proofA", "tapeFound"] },
-      "segments": ["（占位）他自首了。", "（占位）节目以合播补上。", "（占位）真相不是把人钉在墙上。"]
+      "segments": [
+        "你把信放在陈墨面前，没有说一句重话。",
+        "他盯着「第 7 个节目我保下来了」看了很久，然后自己去了广播站。",
+        "校庆七点，母带准时播出。这次是两个人一起报的幕。",
+        "真相不是把人钉在墙上，是把他扶起来。"
+      ]
     },
     {
       "id": "E-B",
-      "name": "（占位结局 B）留白",
+      "name": "《留白》",
       "choiceId": "PUBLIC",
       "requires": { "allFlags": ["proofB"] },
-      "segments": ["（占位）证据交给纪律组。", "（占位）程序正确。", "（占位）你赢了推理，输了那个晚上。"]
+      "segments": [
+        "证据交给纪律组，流程走得很快，也很干净。",
+        "陈墨被处分，节目取消；苏晚停职接受调查。",
+        "你在推理社的记录上写下编号 001，字迹很稳。",
+        "你赢了推理，输了那个晚上。"
+      ]
     }
   ],
 
   "finalChoices": [
-    { "id": "PUBLIC", "label": "把证据交给纪律组", "requiresFlag": "proofB" },
-    { "id": "PRIVATE", "label": "先私下对质，给对方一次开口的机会", "requiresFlag": "proofA" }
+    {
+      "id": "PUBLIC",
+      "label": "把证据交给纪律组，走流程",
+      "requiresFlag": "proofB"
+    },
+    {
+      "id": "PRIVATE",
+      "label": "先私下对质，给对方一次开口的机会",
+      "requiresFlag": "proofA"
+    }
   ]
 }
