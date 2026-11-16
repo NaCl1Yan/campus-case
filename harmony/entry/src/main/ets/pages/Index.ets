@@ -530,6 +530,7 @@ struct Index {
             SceneView({
               sceneName: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.name ?? '',
               sceneDesc: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.desc ?? '',
+              sceneFx: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.enterFx ?? 'warm',
               hotspots: this.hotspotItems(),
               bodyTitle: this.bodyTitle,
               bodyText: this.bodyText,
@@ -584,6 +585,8 @@ struct Index {
             SettingsView({
               reduceMotion: this.reduceMotion,
               contentVersion: this.contentVersion,
+              validationText: this.controller.validationErrors.length === 0 ? '通过' :
+                `${this.controller.validationErrors.length} 个问题`,
               restoredFrom: this.controller.restoredFrom,
               onToggleReduceMotion: (value: boolean) => {
                 this.controller.setReduceMotion(value);

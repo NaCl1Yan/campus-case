@@ -45,6 +45,23 @@ export struct SlotsView {
     });
   }
 
+  private confirmDelete(slotId: number, title: string): void {
+    this.getUIContext().showAlertDialog({
+      title: '删除存档',
+      message: `${title} 将被删除，无法恢复。`,
+      primaryButton: {
+        value: '取消',
+        action: () => {
+        },
+      },
+      secondaryButton: {
+        value: '删除',
+        fontColor: '#B3261E',
+        action: () => this.onDelete(slotId),
+      },
+    });
+  }
+
   build() {
     Column({ space: 12 }) {
       Text('存档')
@@ -99,7 +116,7 @@ export struct SlotsView {
                     .fontSize(12)
                     .backgroundColor('#00000000')
                     .fontColor('#B3261E')
-                    .onClick(() => this.onDelete(row.slotId))
+                    .onClick(() => this.confirmDelete(row.slotId, row.title))
                 }
               }
               .width('100%')

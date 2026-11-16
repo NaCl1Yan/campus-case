@@ -3,6 +3,7 @@
 export struct SettingsView {
   @Prop reduceMotion: boolean = false;
   @Prop contentVersion: number = 1;
+  @Prop validationText: string = '通过';
   @Prop restoredFrom: string = '';
 
   onToggleReduceMotion: (value: boolean) => void = () => {
@@ -55,9 +56,9 @@ export struct SettingsView {
         Text('关于')
           .fontSize(14)
           .fontColor('#111827')
-        Text(`内容版本 v${this.contentVersion}`)
+        Text(`内容版本 v${this.contentVersion} · 内容校验：${this.validationText}`)
           .fontSize(12)
-          .fontColor('#6B7280')
+          .fontColor(this.validationText === '通过' ? '#2E7D32' : '#B3261E')
         Text(`本次进度来源：${this.restoredLabel()}`)
           .fontSize(12)
           .fontColor('#6B7280')

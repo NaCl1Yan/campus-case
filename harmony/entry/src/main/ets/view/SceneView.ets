@@ -19,6 +19,7 @@ export class HotspotItem {
 @Component
 export struct SceneView {
   @Prop sceneName: string = '';
+  @Prop sceneFx: string = 'warm';
   @Prop sceneDesc: string = '';
   @Prop hotspots: HotspotItem[] = [];
   @Prop bodyText: string = '';
@@ -68,6 +69,20 @@ export struct SceneView {
     }, 24);
   }
 
+  /** 场景氛围色（warm/cold/neon/dim），替代美术背景，纯色块 + 顶部标题带。 */
+  private fxColor(): string {
+    if (this.sceneFx === 'cold') {
+      return '#E8EEF6';
+    }
+    if (this.sceneFx === 'neon') {
+      return '#EDEAF6';
+    }
+    if (this.sceneFx === 'dim') {
+      return '#E6E8EC';
+    }
+    return '#FBF3E4';
+  }
+
   private stateColor(state: string): string {
     if (state === 'AVAILABLE') {
       return '#26324A';
@@ -96,6 +111,14 @@ export struct SceneView {
 
   build() {
     Column({ space: 10 }) {
+      Row() {
+        Blank()
+      }
+      .width('100%')
+      .height(6)
+      .backgroundColor(this.fxColor())
+      .borderRadius(3)
+
       Text(this.sceneName)
         .fontSize(20)
         .fontWeight(FontWeight.Bold)

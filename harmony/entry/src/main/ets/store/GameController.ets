@@ -23,6 +23,9 @@ export class GameController {
   /** 设置（01 §FR-15）：当前只做「动画减弱」，其余项留给后续。 */
   reduceMotion: boolean = false;
 
+  /** 内容校验结果（01 §FR-16）：空数组表示通过；设置页会显示。 */
+  validationErrors: string[] = [];
+
   // ---------------------------------------------------------------- 初始化与恢复
 
   async init(context: common.UIAbilityContext): Promise<void> {
@@ -33,6 +36,10 @@ export class GameController {
     const decoder = util.TextDecoder.create('utf-8', { ignoreBOM: true });
     this.caseFile = CaseLoader.parse(decoder.decodeToString(bytes));
     this.contentVersion = this.caseFile.contentVersion;
+    this.validationErrors = CaseLoader.validate(this.caseFile);
+    if (this.validationErrors.length > 0) {
+      console.error(`[campus] content invalid: ${this.validationErrors.join('; ')}`);
+    }
     await Prefs.putNumber(Prefs.KEY_CONTENT_VERSION, this.contentVersion);
 
     this.reduceMotion = await Prefs.getBoolean(Prefs.KEY_REDUCE_MOTION, false);
