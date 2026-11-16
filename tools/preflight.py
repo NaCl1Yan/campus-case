@@ -27,6 +27,13 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# 第三方/构建产物目录：这些目录里的源码不参与本仓库的静态检查
+VENDORED = {'.hvigor', 'oh_modules', '.ohpm', 'build', 'node_modules', '.tools'}
+
+
+def is_vendored(path: Path) -> bool:
+    return any(part in VENDORED for part in path.parts)
 VERBOSE = "-v" in sys.argv
 
 for _stream in (sys.stdout, sys.stderr):
@@ -107,7 +114,7 @@ def check_configs() -> dict[str, Any]:
     targets = sorted(ROOT.glob("harmony/**/*.json")) + sorted(ROOT.glob("harmony/**/*.json5"))
     targets += sorted(ROOT.glob("shared/**/*.json"))
     for path in targets:
-        if any(part in {".hvigor", "oh_modules", "build"} for part in path.parts):
+        if is_vendored(path):
             continue
         rel = path.relative_to(ROOT).as_posix()
         try:
@@ -268,7 +275,7 @@ def exports_of(path: Path) -> set[str]:
 def check_arkts_imports() -> None:
     """ArkTS 的相对导入必须指向真实文件，且导入的名字确实是对方的导出。"""
     bad = 0
-    for src in ROOT.glob("harmony/**/*.ets"):
+    for src in [p for p in ROOT.glob("harmony/**/*.ets") if not is_vendored(p)]:
         text = src.read_text(encoding="utf-8")
         for block, target in re.findall(r"import\s*\{([^}]*)\}\s*from\s*'(\.[^']*)'", text):
             rel = src.relative_to(ROOT).as_posix()
@@ -324,7 +331,7 @@ def check_arkts_symbols() -> None:
     engine_fns = declared_members(engine_path, ("static",))
     loader_fns = declared_members(loader_path, ("static",))
     bad = 0
-    for src in ROOT.glob("harmony/**/*.ets"):
+    for src in [p for p in ROOT.glob("harmony/**/*.ets") if not is_vendored(p)]:
         for holder, declared in (("Engine", engine_fns), ("CaseLoader", loader_fns)):
             for name in called_members(src, holder):
                 if name not in declared:
