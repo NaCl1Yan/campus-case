@@ -19,6 +19,7 @@
 | 3 | `powershell -File tools/build-harmony.ps1` | 主模块 `CompileArkTS` + 测试模块 `OhosTestCompileArkTS` | ✅ 双模块 BUILD SUCCESSFUL，`RESULT: PASS` |
 | 4 | `powershell -File tools/run-kotlin-tests.ps1` | Kotlin 侧领域引擎（同一套 42 条 fixtures + 15 条语义用例） | ✅ 16/16 通过 |
 | 5 | `tools/sync-case.ps1 -Check` | 三处内容副本（main rawfile / ohosTest rawfile / Android assets）与 `shared/case` 哈希一致 | ✅ ACK |
+| 6 | `tools/e2e.ps1 -Scenario all` | 三条演示链路 24 项断言（需模拟器在线） | ✅ 24/24 |
 
 ---
 
@@ -48,7 +49,22 @@
 | 读档 | 存档→槽 1 读取 | 回到「已完结 100%」，线索 6/6 |
 | 杀进程恢复 | `aa force-stop` 后重启 | 仍停在「已完结 100%」，来源显示「自动存档槽」 |
 
-### 2.3 新增功能
+### 2.3 演示流水线（`tools/e2e.ps1`，一条命令跑完并自动断言）
+
+| 场景 | 命令 | 断言数 | 结果 |
+| --- | --- | --- | --- |
+| 主线 → E-A《七点钟声》 | `-Scenario happy` | 12 | ✅ 12/12 |
+| 撬锁分支 → E-B《留白》 | `-Scenario breach` | 7 | ✅ 7/7 |
+| 存档 / 读档 / 重开 | `-Scenario slots` | 5 | ✅ 5/5 |
+
+撬锁分支的关键断言（截图见 `docs/screenshots/e2e-breach-*.jpeg`）：
+
+1. 广播站「内部群里的删除消息」显示「已封锁」——节点被永久关闭而不是消失；
+2. 图书馆「未寄出的道歉信」显示「未解锁」，旧钟楼卡片「未解锁」——动机线物理上不可达；
+3. 判断页「先私下对质」灰显，并写明「证据链不完整：动机线 1/3」，HUD 同步显示线索 4/6、行动线 3/3、动机线 1/3；
+4. 只能选「把证据交给纪律组」→ 结局《留白》。
+
+### 2.4 新增功能
 
 | 功能 | 实测结果 |
 | --- | --- |

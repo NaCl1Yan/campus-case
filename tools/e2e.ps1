@@ -179,7 +179,6 @@ function Scenario-Breach {
     Tap '图书馆 · 旧报刊区'; Expect '未解锁' '道歉信节点锁死'
     Tap '‹ 返回'
     Tap '旧钟楼 · 老播音间'; Expect '未解锁' '旧钟楼仍锁定'
-    Tap '‹ 返回'
 
     Tap '线索板' 2400
     Tap '沾着白粉的钥匙卡'; Tap '值班表上的涂改'; Tap '连线'
@@ -203,14 +202,16 @@ function Scenario-Slots {
     Restart-App
     Tap '存档'
     Expect '自动存档' '打开存档页'
-    Tap '存档' 900
+    # 只操作「存档槽 1」那一行（纵向 1200–1450），避免点到自动槽
+    Tap '存档' 1200
     Start-Sleep 1
-    Expect '已存入槽' '写入槽 1'
-    Tap '读取' 900
-    Expect '存档' '读档完成'
+    Expect '覆盖' '槽 1 已写入（按钮变覆盖）'
+    Tap '读取' 1200
+    Start-Sleep 1
+    EnsureNot '自动存档在每次调查后更新' '读档后已离开存档页'
 
     Restart-App
-    Expect '进度来源' '重开后仍可运行'
+    Expect '线索' '杀进程重启后仍能进游戏'
     Tap '设置'
     Expect '动画减弱' '设置页可进'
     Tap '动画减弱'
