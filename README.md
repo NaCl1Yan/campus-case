@@ -142,12 +142,27 @@ campus-case/
 
 | 阶段 | 鸿蒙版 | Android 版 |
 | --- | --- | --- |
-| 需求文档（基础功能，FR-01～17） | ✅ v1.2 | ✅ 沿用同一套（03 文档为映射） |
-| 内容设计（结构与约束） | 🚧 骨架，剧情正文待定 | 🚧 同一份内容，不重写 |
-| 工程骨架（DevEco / Gradle） | ⬜ 未开始 | ⬜ 未开始 |
-| `domain/` 引擎与单测（TC-01～28） | ⬜ 未开始 | ⬜ 未开始 |
+| 需求文档（基础功能，FR-01～17） | ✅ v1.4 | ✅ 沿用同一套（03 文档为映射） |
+| 内容设计（schema + 占位案件 + 42 条用例） | ✅ 已落地 `shared/` | ✅ 同一份，不复制 |
+| `domain/` 判定引擎 | ✅ 代码完成（待 DevEco 编译 + 跑 Hypium） | ✅ 代码完成（待 Gradle 跑 JUnit5） |
+| 工程骨架（DevEco / Gradle app 模块） | ⬜ 未开始 | 🚧 仅 `:domain` JVM 模块 |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
-| 双端一致性（fixtures 双向校验） | — | ⬜ 未开始 |
+| 双端一致性（fixtures 双向校验） | ✅ 用例就绪 | ✅ runner 就绪 |
 
-下一步建议：先按占位内容把**鸿蒙版 `domain/` 五个纯函数 + 28 条用例**跑通，紧接着用**同一批 TC 编号与 fixtures** 在 Kotlin 侧实现一遍（这一步做完，双端一致性就锁死了），最后再分别做两端 UI。反过来先做 UI，等于把判定逻辑返工两次。
+## 5. 如何验证（M2 现状）
+
+```powershell
+# 1) 内容校验 + 规格自检（现在就能跑，只需 Python）
+python tools/validate.py            # 期望：内容通过 + 42/42 用例通过
+
+# 2) Android 引擎单测（需要一个 Gradle，或用 Android Studio 打开 android/）
+cd android; ./gradlew :domain:test
+
+# 3) 鸿蒙引擎单测（需要 DevEco Studio + hvigor）
+cd harmony; hvigorw test
+```
+
+`tools/validate.py` 是开发期参照实现：它跑通只代表"用例与 01 §5.3 语义一致"，**不代表两端代码已跑**。两端要各自跑通同一批 fixtures 才算 AC-18 成立。
+
+下一步建议：M1 建两个工程骨架（DevEco 工程 + Gradle `:app` 模块），把 `shared/case` → `rawfile/`、`assets/` 的复制任务接上，然后在 IDE 里把两端的 28 条单测跑到绿。
