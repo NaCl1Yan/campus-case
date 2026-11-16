@@ -1,0 +1,13 @@
+{
+  "modelVersion": "5.0.0",
+  "name": "campus-case",
+  "version": "1.0.0",
+  "description": "校园线索推理与多结局探索 App（鸿蒙侧）",
+  "main": "",
+  "author": "nacl1yan",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.24"
+  }
+}
