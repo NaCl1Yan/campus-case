@@ -149,7 +149,7 @@ campus-case/
 | 工程骨架（DevEco / Gradle app 模块） | ✅ 骨架就绪（未编译验证） | ✅ 骨架就绪（未编译验证） |
 | UI 与动画（6 类） | ⬜ 未开始 | ⬜ 未开始 |
 | 持久化与恢复（Preferences+RDB / DataStore+Room） | ⬜ 未开始 | ⬜ 未开始 |
-| 双端一致性（fixtures 双向校验） | ✅ 用例就绪 | ✅ runner 就绪 |
+| 双端一致性（fixtures 双向校验） | 🚧 14 条语义用例；fixture runner 待补（AC-18 未闭环） | ✅ fixture runner 已随单测跑通 |
 
 ## 5. 如何验证（M2 现状）
 
