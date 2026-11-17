@@ -18,6 +18,7 @@ export class HotspotItem {
 /** 场景内（01 §FR-03/05）：热点列表 + 打字机正文 + 已调查/已封锁可见。 */
 @Component
 export struct SceneView {
+  @Prop fs: number = 1;
   @Prop sceneName: string = '';
   @Prop sceneFx: string = 'warm';
   @Prop sceneDesc: string = '';
@@ -120,21 +121,21 @@ export struct SceneView {
       .borderRadius(3)
 
       Text(this.sceneName)
-        .fontSize(20)
+        .fontSize(20 * this.fs)
         .fontWeight(FontWeight.Bold)
         .fontColor('#111827')
       Text(this.sceneDesc)
-        .fontSize(12)
+        .fontSize(12 * this.fs)
         .fontColor('#6B7280')
 
       if (this.bodyTitle.length > 0) {
         Column({ space: 6 }) {
           Text(this.bodyTitle)
-            .fontSize(14)
+            .fontSize(14 * this.fs)
             .fontWeight(FontWeight.Medium)
             .fontColor('#26324A')
           Text(this.shown)
-            .fontSize(13)
+            .fontSize(13 * this.fs)
             .lineHeight(21)
             .fontColor('#374151')
         }
@@ -147,7 +148,7 @@ export struct SceneView {
       }
 
       Text('可调查的地方')
-        .fontSize(13)
+        .fontSize(13 * this.fs)
         .fontWeight(FontWeight.Medium)
         .fontColor('#26324A')
 
@@ -156,11 +157,11 @@ export struct SceneView {
           ListItem() {
             Row() {
               Text(item.title)
-                .fontSize(14)
+                .fontSize(14 * this.fs)
                 .fontColor(this.stateColor(item.state))
                 .layoutWeight(1)
               Text(this.stateLabel(item.state))
-                .fontSize(11)
+                .fontSize(11 * this.fs)
                 .fontColor(this.stateColor(item.state))
             }
             .width('100%')

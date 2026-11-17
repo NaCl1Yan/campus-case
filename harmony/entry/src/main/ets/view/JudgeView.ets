@@ -16,6 +16,7 @@ export class JudgeOption {
 /** 最终判断（01 §FR-09）：不可用选项灰显并说明原因，提交前二次确认。 */
 @Component
 export struct JudgeView {
+  @Prop fs: number = 1;
   @Prop options: JudgeOption[] = [];
   @Prop ready: boolean = false;
 
@@ -43,21 +44,21 @@ export struct JudgeView {
   build() {
     Column({ space: 14 }) {
       Text('最终判断')
-        .fontSize(22)
+        .fontSize(22 * this.fs)
         .fontWeight(FontWeight.Bold)
         .fontColor('#111827')
       Text(this.ready ? '你手里的证据已经能说完整一句话了。' : '证据还不足以支撑一个判断。')
-        .fontSize(12)
+        .fontSize(12 * this.fs)
         .fontColor(this.ready ? '#6B7280' : '#B3261E')
 
       ForEach(this.options, (option: JudgeOption) => {
         Column({ space: 6 }) {
           Text(option.label)
-            .fontSize(15)
+            .fontSize(15 * this.fs)
             .fontColor(option.available ? '#111827' : '#9CA3AF')
           if (!option.available) {
             Text(option.reason)
-              .fontSize(11)
+              .fontSize(11 * this.fs)
               .fontColor('#B3261E')
           }
         }

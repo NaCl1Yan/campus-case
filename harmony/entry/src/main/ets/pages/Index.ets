@@ -16,6 +16,7 @@ import { SlotRow, SlotsView } from '../view/SlotsView';
 import { GalleryRow, GalleryView } from '../view/GalleryView';
 import { SettingsView } from '../view/SettingsView';
 import { EndingRow } from '../store/CaseDb';
+import { Prefs } from '../store/Prefs';
 
 /**
  * 单页应用 + 视图切换（01 §8.1 页面清单的落地）。
@@ -43,6 +44,7 @@ struct Index {
   @State galleryRows: GalleryRow[] = [];
   @State reduceMotion: boolean = false;
   @State contentVersion: number = 1;
+  @State fontScale: number = 1;
   @State transitionFlag: boolean = false;
 
   private controller: GameController = GameController.I;
@@ -66,6 +68,7 @@ struct Index {
       this.ready = true;
       this.reduceMotion = this.controller.reduceMotion;
       this.contentVersion = this.caseFile().contentVersion;
+      this.fontScale = await Prefs.getNumber(Prefs.KEY_FONT_SCALE, 1);
       this.refresh();
       if (this.mirror.stage === Stage.FINISHED) {
         this.view = 'ending';
@@ -503,7 +506,8 @@ struct Index {
           ready: this.readyChip && this.mirror.stage !== Stage.FINISHED,
           savedText: this.savedText,
           showBack: this.view === 'scene' || this.view === 'board' ||
-            this.view === 'deduce' || this.view === 'slots',
+            this.view === 'deduce' || this.view === 'slots' ||
+            this.view === 'gallery' || this.view === 'settings',
           onBack: () => this.nav('hub'),
           onBoard: () => this.nav('board'),
           onSlots: () => {
@@ -520,6 +524,7 @@ struct Index {
         Column() {
           if (this.view === 'brief') {
             BriefView({
+              fs: this.fontScale,
               title: this.caseFile().title,
               subtitle: this.caseFile().subtitle ?? '',
               client: this.caseFile().brief.client,
@@ -534,6 +539,7 @@ struct Index {
             })
           } else if (this.view === 'hub') {
             HubView({
+              fs: this.fontScale,
               cards: this.sceneCards(),
               onEnter: (sceneId: string) => {
                 this.enterScene(sceneId);
@@ -542,6 +548,7 @@ struct Index {
             })
           } else if (this.view === 'scene') {
             SceneView({
+              fs: this.fontScale,
               sceneName: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.name ?? '',
               sceneDesc: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.desc ?? '',
               sceneFx: this.caseFile().scenes.find((s) => s.id === this.sceneId)?.enterFx ?? 'warm',
@@ -554,6 +561,7 @@ struct Index {
             })
           } else if (this.view === 'board') {
             ClueBoardView({
+              fs: this.fontScale,
               cards: this.clueCards(),
               chainBText: this.chainBText,
               chainAText: this.chainAText,
@@ -570,6 +578,7 @@ struct Index {
             })
           } else if (this.view === 'deduce') {
             DeduceView({
+              fs: this.fontScale,
               cards: this.proveCards(),
               clueIds: this.clueIds(),
               clueNames: this.clueNames(),
@@ -579,6 +588,7 @@ struct Index {
             })
           } else if (this.view === 'judge') {
             JudgeView({
+              fs: this.fontScale,
               options: this.judgeOptions(),
               ready: this.readyChip && this.mirror.stage !== Stage.FINISHED,
               onChoose: (choiceId: string) => {
@@ -587,6 +597,7 @@ struct Index {
             })
           } else if (this.view === 'ending') {
             EndingView({
+              fs: this.fontScale,
               endingName: this.endingName(),
               segments: this.endingSegments(),
               onRestart: () => {
@@ -597,22 +608,29 @@ struct Index {
               },
             })
           } else if (this.view === 'gallery') {
-            GalleryView({ rows: this.galleryRows })
+            GalleryView({ fs: this.fontScale, rows: this.galleryRows })
           } else if (this.view === 'settings') {
             SettingsView({
+              fs: this.fontScale,
               reduceMotion: this.reduceMotion,
               contentVersion: this.contentVersion,
               validationText: this.controller.validationErrors.length === 0 ? '通过' :
                 `${this.controller.validationErrors.length} 个问题`,
+              fontScale: this.fontScale,
               restoredFrom: this.controller.restoredFrom,
               onToggleReduceMotion: (value: boolean) => {
                 this.controller.setReduceMotion(value);
                 this.reduceMotion = value;
               },
+              onFontScale: (value: number) => {
+                this.fontScale = value;
+                Prefs.putNumber(Prefs.KEY_FONT_SCALE, value);
+              },
               onClearProgress: () => this.askRestart(),
             })
           } else if (this.view === 'slots') {
             SlotsView({
+              fs: this.fontScale,
               rows: this.slotRows,
               canSave: this.mirror.stage !== Stage.PROLOGUE,
               onSave: (slotId: number) => {

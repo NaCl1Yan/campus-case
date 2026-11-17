@@ -4,6 +4,7 @@
  */
 @Component
 export struct HudBar {
+  @Prop fs: number = 1;
   @Prop stageText: string = '';
   @Prop objective: string = '';
   @Prop clueText: string = '';
@@ -34,20 +35,20 @@ export struct HudBar {
       Row() {
         if (this.showBack) {
           Button('‹ 返回')
-            .fontSize(14)
+            .fontSize(14 * this.fs)
             .height(30)
             .backgroundColor('#00000000')
             .fontColor('#26324A')
             .onClick(() => this.onBack())
         }
         Text(this.stageText)
-          .fontSize(14)
+          .fontSize(14 * this.fs)
           .fontWeight(FontWeight.Bold)
           .fontColor('#26324A')
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
         Button('存档')
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .height(30)
           .backgroundColor('#00000000')
           .fontColor('#26324A')
@@ -57,7 +58,7 @@ export struct HudBar {
 
       Row() {
         Text(`🎯 ${this.objective}`)
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .fontColor('#4B5563')
           .maxLines(2)
           .layoutWeight(1)
@@ -68,7 +69,7 @@ export struct HudBar {
             .color('#26324A')
             .style({ strokeWidth: 5 })
           Text(`${Math.round(this.progress)}`)
-            .fontSize(11)
+            .fontSize(11 * this.fs)
             .fontColor('#26324A')
         }
       }
@@ -76,17 +77,17 @@ export struct HudBar {
 
       Row({ space: 10 }) {
         Text(`线索 ${this.clueText}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#6B7280')
         Text(`行动线 ${this.chainBText}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#6B7280')
         Text(`动机线 ${this.chainAText}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#6B7280')
         Blank()
         Text(this.savedText)
-          .fontSize(11)
+          .fontSize(11 * this.fs)
           .fontColor('#9CA3AF')
       }
       .width('100%')
@@ -94,7 +95,7 @@ export struct HudBar {
       Row({ space: 8 }) {
         if (this.ready) {
           Text('可推理')
-            .fontSize(12)
+            .fontSize(12 * this.fs)
             .fontColor('#FFFFFF')
             .backgroundColor('#B3261E')
             .padding({ left: 8, right: 8, top: 3, bottom: 3 })
@@ -102,25 +103,25 @@ export struct HudBar {
         }
         Blank()
         Button('简报')
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .height(30)
           .backgroundColor('#00000000')
           .fontColor('#26324A')
           .onClick(() => this.onBrief())
         Button('收集册')
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .height(30)
           .backgroundColor('#00000000')
           .fontColor('#26324A')
           .onClick(() => this.onGallery())
         Button('设置')
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .height(30)
           .backgroundColor('#00000000')
           .fontColor('#26324A')
           .onClick(() => this.onSettings())
         Button('重来')
-          .fontSize(13)
+          .fontSize(13 * this.fs)
           .height(30)
           .backgroundColor('#00000000')
           .fontColor('#B3261E')

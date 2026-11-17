@@ -16,16 +16,17 @@ export class GalleryRow {
 /** 结局收集册（01 §FR-10 / FR-14）：已解锁显示时间，未解锁只给方向性提示。 */
 @Component
 export struct GalleryView {
+  @Prop fs: number = 1;
   @Prop rows: GalleryRow[] = [];
 
   build() {
     Column({ space: 12 }) {
       Text('结局收集册')
-        .fontSize(20)
+        .fontSize(20 * this.fs)
         .fontWeight(FontWeight.Bold)
         .fontColor('#111827')
       Text('换个判断，会走向另一条路。')
-        .fontSize(12)
+        .fontSize(12 * this.fs)
         .fontColor('#9CA3AF')
 
       List({ space: 10 }) {
@@ -34,17 +35,17 @@ export struct GalleryView {
             Column({ space: 6 }) {
               Row() {
                 Text(row.unlocked ? row.name : '? ? ?')
-                  .fontSize(16)
+                  .fontSize(16 * this.fs)
                   .fontWeight(row.unlocked ? FontWeight.Medium : FontWeight.Normal)
                   .fontColor(row.unlocked ? '#111827' : '#9CA3AF')
                 Blank()
                 Text(row.unlocked ? '已解锁' : '未解锁')
-                  .fontSize(11)
+                  .fontSize(11 * this.fs)
                   .fontColor(row.unlocked ? '#2E7D32' : '#9CA3AF')
               }
               .width('100%')
               Text(row.detail)
-                .fontSize(12)
+                .fontSize(12 * this.fs)
                 .fontColor('#6B7280')
             }
             .width('100%')

@@ -21,6 +21,7 @@ export class ProveCard {
 /** 推理工坊（01 §FR-08）：每题选两条线索提交，错不惩罚、提示逐级解锁。 */
 @Component
 export struct DeduceView {
+  @Prop fs: number = 1;
   @Prop cards: ProveCard[] = [];
   @Prop clueNames: string[] = [];
   @Prop clueIds: string[] = [];
@@ -52,11 +53,11 @@ export struct DeduceView {
   build() {
     Column({ space: 12 }) {
       Text('推理工坊')
-        .fontSize(20)
+        .fontSize(20 * this.fs)
         .fontWeight(FontWeight.Bold)
         .fontColor('#111827')
       Text('证据不会自己说话。选两条线索，把它们放进这一问里。')
-        .fontSize(12)
+        .fontSize(12 * this.fs)
         .fontColor('#9CA3AF')
 
       List({ space: 12 }) {
@@ -65,12 +66,12 @@ export struct DeduceView {
             Column({ space: 8 }) {
               Row() {
                 Text(card.question)
-                  .fontSize(14)
+                  .fontSize(14 * this.fs)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#111827')
                   .layoutWeight(1)
                 Text(card.passed ? '已通过' : '待验证')
-                  .fontSize(11)
+                  .fontSize(11 * this.fs)
                   .fontColor(card.passed ? '#2E7D32' : '#B3261E')
               }
               .width('100%')
@@ -79,7 +80,7 @@ export struct DeduceView {
                 Flex({ wrap: FlexWrap.Wrap }) {
                   ForEach(card.pool, (clueId: string) => {
                     Text(this.clueName(clueId))
-                      .fontSize(12)
+                      .fontSize(12 * this.fs)
                       .fontColor(this.picked.includes(clueId) ? '#FFFFFF' : '#26324A')
                       .backgroundColor(this.picked.includes(clueId) ? '#26324A' : '#EEF2F7')
                       .padding({ left: 10, right: 10, top: 6, bottom: 6 })
@@ -93,7 +94,7 @@ export struct DeduceView {
                 Row({ space: 8 }) {
                   Button('提交')
                     .height(34)
-                    .fontSize(13)
+                    .fontSize(13 * this.fs)
                     .backgroundColor('#26324A')
                     .enabled(this.picked.length === 2)
                     .onClick(() => {
@@ -102,7 +103,7 @@ export struct DeduceView {
                     })
                   Button('提示')
                     .height(34)
-                    .fontSize(13)
+                    .fontSize(13 * this.fs)
                     .backgroundColor('#EEF2F7')
                     .fontColor('#26324A')
                     .onClick(() => {
@@ -114,13 +115,13 @@ export struct DeduceView {
                 .width('100%')
               } else if (card.passed) {
                 Text(`结论：${card.answerHint}`)
-                  .fontSize(12)
+                  .fontSize(12 * this.fs)
                   .fontColor('#2E7D32')
                   .lineHeight(19)
               } else {
                 Button('开始这一问')
                   .height(34)
-                  .fontSize(13)
+                  .fontSize(13 * this.fs)
                   .backgroundColor('#EEF2F7')
                   .fontColor('#26324A')
                   .onClick(() => {
@@ -133,7 +134,7 @@ export struct DeduceView {
 
               if (this.feedback.length > 0 && this.active === card.id) {
                 Text(this.feedback)
-                  .fontSize(11)
+                  .fontSize(11 * this.fs)
                   .fontColor('#6B7280')
               }
             }

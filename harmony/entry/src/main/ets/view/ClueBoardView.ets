@@ -25,6 +25,7 @@ export class ClueCardData {
 /** 线索板（01 §FR-07）：卡槽 + 两两连线 + 链进度 + 去验证。 */
 @Component
 export struct ClueBoardView {
+  @Prop fs: number = 1;
   @Prop cards: ClueCardData[] = [];
   @Prop chainBText: string = '';
   @Prop chainAText: string = '';
@@ -70,28 +71,28 @@ export struct ClueBoardView {
     Column({ space: 10 }) {
       Row() {
         Text('线索板')
-          .fontSize(20)
+          .fontSize(20 * this.fs)
           .fontWeight(FontWeight.Bold)
           .fontColor('#111827')
         Blank()
         Text(`${this.cards.filter((c: ClueCardData) => c.owned).length} / ${this.cards.length}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#6B7280')
       }
       .width('100%')
 
       Row({ space: 12 }) {
         Text(`行动线 ${this.chainBText}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#4B5563')
         Text(`动机线 ${this.chainAText}`)
-          .fontSize(12)
+          .fontSize(12 * this.fs)
           .fontColor('#4B5563')
       }
       .width('100%')
 
       Text(this.message.length > 0 ? this.message : '选两张线索，点「连线」验证它们之间有没有关系。')
-        .fontSize(12)
+        .fontSize(12 * this.fs)
         .fontColor(this.message.length > 0 ? '#B3261E' : '#9CA3AF')
 
       ChainGraph({
@@ -103,12 +104,12 @@ export struct ClueBoardView {
       if (this.conclusions.length > 0) {
         Column({ space: 4 }) {
           Text('已成立的结论')
-            .fontSize(12)
+            .fontSize(12 * this.fs)
             .fontWeight(FontWeight.Medium)
             .fontColor('#2E7D32')
           ForEach(this.conclusions, (text: string, index: number) => {
             Text(`${index + 1}. ${text}`)
-              .fontSize(11)
+              .fontSize(11 * this.fs)
               .lineHeight(18)
               .fontColor('#374151')
           }, (text: string, index: number) => `${index}:${text}`)
@@ -125,17 +126,17 @@ export struct ClueBoardView {
           GridItem() {
             Column({ space: 4 }) {
               Text(card.owned ? card.name : '? ? ?')
-                .fontSize(13)
+                .fontSize(13 * this.fs)
                 .fontWeight(FontWeight.Medium)
                 .fontColor(card.owned ? '#111827' : '#9CA3AF')
                 .maxLines(1)
               Text(card.owned ? card.typeLabel : card.hint)
-                .fontSize(10)
+                .fontSize(10 * this.fs)
                 .fontColor('#6B7280')
                 .maxLines(2)
               if (card.linked) {
                 Text('已连')
-                  .fontSize(9)
+                  .fontSize(9 * this.fs)
                   .fontColor('#FFFFFF')
                   .backgroundColor('#2E7D32')
                   .padding({ left: 5, right: 5, top: 1, bottom: 1 })
@@ -174,7 +175,7 @@ export struct ClueBoardView {
         Button('连线')
           .layoutWeight(1)
           .height(42)
-          .fontSize(15)
+          .fontSize(15 * this.fs)
           .backgroundColor('#26324A')
           .enabled(this.selected.length === 2)
           .onClick(() => {
@@ -187,7 +188,7 @@ export struct ClueBoardView {
         Button('去验证')
           .layoutWeight(1)
           .height(42)
-          .fontSize(15)
+          .fontSize(15 * this.fs)
           .backgroundColor(this.canDeduce ? '#2E7D32' : '#E5E7EB')
           .fontColor(this.canDeduce ? '#FFFFFF' : '#9CA3AF')
           .enabled(this.canDeduce)
