@@ -27,8 +27,10 @@ export struct DeduceView {
   @Prop clueIds: string[] = [];
   @State active: string = '';
   @State picked: string[] = [];
-  @State feedback: string = '';
-  @State hintLevel: number = 0;
+  // 每道题各自保留提示与反馈（以前是全局单值，点第二题的提示会把第一题的覆盖掉）
+  @State noteIds: string[] = [];
+  @State noteTexts: string[] = [];
+  @State noteLevels: number[] = [];
 
   onSubmit: (stageId: string, picked: string[]) => void = () => {
   };
@@ -43,6 +45,36 @@ export struct DeduceView {
       return;
     }
     this.picked = this.picked.concat([id]);
+  }
+
+  private noteIndex(id: string): number {
+    return this.noteIds.indexOf(id);
+  }
+
+  private noteOf(id: string): string {
+    const i = this.noteIndex(id);
+    return i >= 0 ? this.noteTexts[i] : '';
+  }
+
+  private levelOf(id: string): number {
+    const i = this.noteIndex(id);
+    return i >= 0 ? this.noteLevels[i] : 0;
+  }
+
+  private setNote(id: string, text: string, level: number): void {
+    const i = this.noteIndex(id);
+    if (i >= 0) {
+      const texts: string[] = this.noteTexts.slice();
+      texts[i] = text;
+      this.noteTexts = texts;
+      const levels: number[] = this.noteLevels.slice();
+      levels[i] = level;
+      this.noteLevels = levels;
+      return;
+    }
+    this.noteIds = this.noteIds.concat([id]);
+    this.noteTexts = this.noteTexts.concat([text]);
+    this.noteLevels = this.noteLevels.concat([level]);
   }
 
   private clueName(id: string): string {
@@ -117,7 +149,7 @@ export struct DeduceView {
                     .enabled(this.picked.length === 2)
                     .onClick(() => {
                       this.onSubmit(card.id, this.picked);
-                      this.feedback = '已提交，看看结论对不对。';
+                      this.setNote(card.id, '已记录，看看结论对不对。', this.levelOf(card.id));
                     })
                   Button('提示')
                     .height(36)
@@ -126,9 +158,9 @@ export struct DeduceView {
                     .fontColor($r('app.color.brand_text'))
                     .borderRadius(10)
                     .onClick(() => {
-                      const level = Math.min(this.hintLevel + 1, card.hints.length);
-                      this.hintLevel = level;
-                      this.feedback = level > 0 ? `提示 ${level}：${card.hints[level - 1]}` : '';
+                      const level = Math.min(this.levelOf(card.id) + 1, card.hints.length);
+                      const text = level > 0 ? `提示 ${level}/${card.hints.length}：${card.hints[level - 1]}` : '';
+                      this.setNote(card.id, text, level);
                     })
                 }
                 .width('100%')
@@ -147,15 +179,19 @@ export struct DeduceView {
                   .onClick(() => {
                     this.active = card.id;
                     this.picked = [];
-                    this.feedback = '';
-                    this.hintLevel = 0;
+                    this.setNote(card.id, '', 0);
                   })
               }
 
-              if (this.feedback.length > 0 && this.active === card.id) {
-                Text(this.feedback)
-                  .fontSize(11 * this.fs)
+              if (this.noteOf(card.id).length > 0) {
+                Text(this.noteOf(card.id))
+                  .fontSize(11.5 * this.fs)
+                  .lineHeight(18)
                   .fontColor($r('app.color.text_secondary'))
+                  .width('100%')
+                  .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+                  .backgroundColor($r('app.color.surface_alt'))
+                  .borderRadius(10)
               }
             }
             .width('100%')

@@ -19,6 +19,17 @@ import { EndingRow } from '../store/CaseDb';
 import { Prefs } from '../store/Prefs';
 import { ThemeState } from '../store/ThemeState';
 
+/** 一条提示气泡（多条同时展示，各自计时消失）。 */
+class ToastItem {
+  id: number;
+  text: string;
+
+  constructor(id: number, text: string) {
+    this.id = id;
+    this.text = text;
+  }
+}
+
 /**
  * 单页应用 + 视图切换（01 §8.1 页面清单的落地）。
  * 约定：所有业务判定走 GameController → Engine；页面只做展示与事件转发。
@@ -32,7 +43,7 @@ struct Index {
   @State sceneId: string = '';
   @State bodyTitle: string = '';
   @State bodyText: string = '';
-  @State toast: string = '';
+  @State toasts: ToastItem[] = [];
   @State progress: number = 0;
   @State stageText: string = '';
   @State objective: string = '';
@@ -51,17 +62,10 @@ struct Index {
   @State themeKey: number = 0;
 
   private controller: GameController = GameController.I;
-  private toastTimer: number = -1;
+  private toastSeq: number = 0;
 
   aboutToAppear(): void {
     this.bootstrap();
-  }
-
-  aboutToDisappear(): void {
-    if (this.toastTimer !== -1) {
-      clearInterval(this.toastTimer);
-      this.toastTimer = -1;
-    }
   }
 
   private async bootstrap(): Promise<void> {
@@ -86,7 +90,7 @@ struct Index {
         this.transitionFlag = true;
       });
     } catch (e) {
-      this.toast = `初始化失败：${e}`;
+      this.showToast(`初始化失败：${e}`);
     }
   }
 
@@ -112,18 +116,22 @@ struct Index {
     this.savedText = `已保存 ${stamp.getHours().toString().padStart(2, '0')}:${stamp.getMinutes().toString().padStart(2, '0')}`;
   }
 
+  /**
+   * 提示不覆盖：多条同时叠在底部上方（最多 3 条），各自计时消失。
+   * 停留时间按字数自适应：短提示 ~3.4s，长提示最长 10s——以前固定 2.2s，长句根本读不完。
+   */
   private showToast(text: string): void {
-    this.toast = text;
-    if (this.toastTimer !== -1) {
-      clearInterval(this.toastTimer);
-    }
-    this.toastTimer = setInterval(() => {
-      this.toast = '';
-      if (this.toastTimer !== -1) {
-        clearInterval(this.toastTimer);
-        this.toastTimer = -1;
-      }
-    }, 2200);
+    this.toastSeq = this.toastSeq + 1;
+    const item = new ToastItem(this.toastSeq, text);
+    this.toasts = this.toasts.concat([item]).slice(-3);
+    const stayMs = Math.max(3400, Math.min(10000, 2200 + text.length * 160));
+    setTimeout(() => {
+      this.dismissToast(item.id);
+    }, stayMs);
+  }
+
+  private dismissToast(id: number): void {
+    this.toasts = this.toasts.filter((t: ToastItem) => t.id !== id);
   }
 
   /** 外观：follow/light/dark。setColorMode 会触发配置变更重绘，themeKey 用于让 Canvas 重画。 */
@@ -523,7 +531,8 @@ struct Index {
   }
 
   build() {
-    Column() {
+    Stack({ alignContent: Alignment.Bottom }) {
+      Column() {
       if (!this.ready) {
         Column({ space: 10 }) {
           LoadingProgress().width(48).height(48)
@@ -693,8 +702,7 @@ struct Index {
         .opacity(this.transitionFlag ? 1 : 0.2)
         .animation({ duration: 220, curve: Curve.EaseOut })
 
-        if (this.view !== 'ending') {
-          Row({ space: 8 }) {
+        Row({ space: 8 }) {
             Text('地图')
               .fontSize(13 * this.fontScale)
               .fontColor(this.view === 'hub' || this.view === 'brief' ? $r('app.color.on_brand') : $r('app.color.brand_text'))
@@ -745,21 +753,28 @@ struct Index {
           .padding({ left: 16, right: 16, top: 10, bottom: 14 })
           .backgroundColor($r('app.color.surface'))
           .border({ width: { top: 1 }, color: $r('app.color.border') })
-        }
       }
 
-      if (this.toast.length > 0) {
-        Text(this.toast)
-          .fontSize(13)
-          .fontColor($r('app.color.on_toast'))
-          .backgroundColor($r('app.color.toast_bg'))
-          .padding({ left: 16, right: 16, top: 10, bottom: 10 })
-          .borderRadius(20)
-          .margin({ bottom: 90 })
-          .transition(TransitionEffect.asymmetric(
-            TransitionEffect.OPACITY.animation({ duration: 200 }),
-            TransitionEffect.OPACITY.animation({ duration: 200 })),
-          )
+      }
+      .width('100%')
+      .height('100%')
+
+      if (this.toasts.length > 0) {
+        Column({ space: 6 }) {
+          ForEach(this.toasts, (item: ToastItem) => {
+            Text(item.text)
+              .fontSize(13 * this.fontScale)
+              .fontColor($r('app.color.on_toast'))
+              .backgroundColor($r('app.color.toast_bg'))
+              .padding({ left: 16, right: 16, top: 9, bottom: 9 })
+              .borderRadius(18)
+              .maxLines(3)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .transition(TransitionEffect.OPACITY.animation({ duration: 160 }))
+              .onClick(() => this.dismissToast(item.id))
+          }, (item: ToastItem) => `${item.id}`)
+        }
+        .margin({ bottom: 96 })
       }
     }
     .width('100%')
