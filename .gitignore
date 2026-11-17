@@ -51,8 +51,9 @@ tmp/
 __pycache__/
 *.pyc
 
-# ---- 本地工具链缓存 ----
+# ---- 本地工具链缓存与录屏中间产物 ----
 .tools/
+tools/__frames/
 
 # ---- 构建期复制的内容副本（唯一源在 shared/case）----
 harmony/**/rawfile/case/

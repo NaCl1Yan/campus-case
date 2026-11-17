@@ -1,7 +1,7 @@
 # 进度与明日待办
 ## 《钟楼七点》鸿蒙版 · 2026-11-16 收工快照
 
-> 最近更新：2026-11-17 20:45（Asia/Shanghai）
+> 最近更新：2026-11-17 21:10（Asia/Shanghai）
 > 分支：`main`；里程碑 tag：`v0.9.0-playable`（后续改动已在其后追加）
 > 仓库位置：**`E:\campus-case`**（2026-11-17 从 `E:\校园推理galgame` 迁出，见 §3.6）
 
@@ -126,6 +126,21 @@ IDE 截图 `docs/screenshots/hypium-run-22.png`，154 ms）。
 | 口径修正 | `01` 目标平台改为 HarmonyOS 单端（v1.6），AC-18 降级为历史说明；`02`/README/TestReport/PROGRESS 里「双端」措辞一并改掉 |
 
 回归：`preflight` PASS 8、`validate` 42/42、`sync-case -Check` ACK、`build-harmony.ps1` PASS、Hypium 22/22 不受影响。
+
+### 3.9 录屏 + 作业要求自查（2026-11-17 21:10）
+
+作业要求「README 含功能/环境/截图/运行方法 + 真实录屏，≥6 条自动化测试覆盖正常边界异常」，逐条补齐：
+
+| 做的东西 | 结果 |
+| --- | --- |
+| 录屏工具链 | `tools/device-capture.sh`（设备端 `snapshot_display` 连续抓帧）+ `tools/make-demo-gif.py`（去黑帧/去重复帧 → 调色板 GIF） |
+| 录屏内容 | 882 帧原始 → 去黑 54、去重复 728、去壁纸段 → **82 帧 / 24 秒 / 5.6 MB**，覆盖启动→接案→取证→连线→验证→判断→结局→收集册 |
+| README 结构 | 新增 §0 快速开始（0.1 功能 / 0.2 开发环境 / 0.3 运行方法 / 0.4 截图与录屏 / 0.5 自动化测试），新增 §7 作业要求对照 |
+| 需求书补章 | `docs/01` 增 §2.3 模块划分与接口契约（模块表 + Engine/GameController/Prefs/CaseDb 接口签名 + 三条解耦硬规则）、§2.4 分工（独立完成声明 + 组队模板），版本升 v1.7 |
+| 测试归类 | `TestReport` 增 §1.1：22 条 Hypium 按 **正常 6 / 边界 8 / 异常 8** 逐条列，另记 24 条 UI 流水线断言 |
+
+> 录屏细节：设备没有 `screenrecord`，改用 `snapshot_display` 逐帧抓（约 2.5 fps），
+> 抓帧期间跑一遍 `e2e.ps1 -Scenario happy`，所以录到的就是脚本化的真实操作，不是摆拍。
 
 ## 4. 今天踩过的坑（明天不用重复踩）
 | 坑 | 结论 |

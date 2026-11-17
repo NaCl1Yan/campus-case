@@ -11,6 +11,78 @@ HarmonyOS 单机推理叙事 App《钟楼七点》：场景探索 → 线索收�
 
 ---
 
+## 0. 快速开始
+
+### 0.1 这是什么（功能）
+
+单机推理叙事 App：玩家是校报记者，调查广播站母带失窃案。玩法链路是
+**看简报接案 → 地图选场景 → 点热点拿线索 → 线索板两两连线成结论 → 推理工坊两关验证 → 最终判断 → 两个互斥结局**，
+全程有 HUD（阶段 / 目标 / 线索 / 双链 / 进度环）、自动存档 + 3 个手动槽、杀进程恢复、结局收集册、设置（动画减弱 / 字号三档）。
+
+规模：4 个场景（1 个条件解锁）/ 12 个事件节点 / 6 条线索 / 3 条连线规则 / 2 个推理关卡 / 2 个结局；
+分支真实生效——撬锁拿 C1 会永久关闭群消息节点，从此拿不到 C4，动机线断裂，最终只能走结局 B。
+
+### 0.2 开发环境
+
+| 项 | 版本 / 说明 |
+| --- | --- |
+| IDE | DevEco Studio 5.0.5（`D:\huawei\DevEco Studio`） |
+| 语言 / 框架 | ArkTS + ArkUI（声明式），Stage 模型，单 HAP |
+| SDK | HarmonyOS NEXT 5.0.5(17)，`compatibleSdkVersion` / `targetSdkVersion` 均为 5.0.5(17) |
+| 构建 | hvigor 5.17.5（IDE 自带）；命令行走 `tools/build-harmony.ps1` |
+| 依赖 | `@ohos/hypium` 1.0.21、`@ohos/hamock` 1.0.0（只用于测试） |
+| 设备 | DevEco 模拟器 API 17（`hdc list targets` → `127.0.0.1:5555`） |
+| 辅助工具 | Python 3.12（预检/校验/生成器）、PowerShell 5.1+、hdc（SDK 自带） |
+| 仓库路径 | 必须纯 ASCII（本机 `E:\campus-case`），hvigor 拒绝中文路径 |
+
+### 0.3 运行方法
+
+```powershell
+# 1) 准备内容副本（clone 下来 rawfile 是空的，不跑这步应用会白屏）
+powershell -File tools/sync-case.ps1
+
+# 2) 打开工程：DevEco → File → Open → E:\campus-case\harmony（选 harmony 子目录）
+#    首次打开等 Sync / ohpm install 完成，然后点 ▶ Run 即可装到模拟器
+
+# 3) 或者纯命令行编译 + 安装 + 启动
+powershell -File tools/build-harmony.ps1
+$hdc = 'D:\huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
+& $hdc install -r harmony\entry\build\default\outputs\default\entry-default-unsigned.hap
+& $hdc shell aa start -a EntryAbility -b com.nacl1yan.campuscase
+```
+
+单元测试（22 个 `it`）：IDE 里右键 `entry/src/ohosTest/ets/test` → **Run 'All Tests in 'test''**；
+命令行跑法见 [03-编译与单测检查单](docs/03-编译与单测检查单.md) §2。
+
+### 0.4 截图与录屏
+
+**录屏**（真实设备录制，脚本见 `tools/device-capture.sh` + `tools/make-demo-gif.py`）：
+启动 → 接案 → 三处取证 → 线索板连线 → 两关验证 → 判断 → 结局《七点钟声》→ 收集册点亮。
+
+![演示录屏](docs/demo/demo.gif)
+
+> GIF 为了仓库体积压到 480px / 5.6 MB；原始逐帧录制共 882 帧（1260×2720）。也见 [demo.gif 原文件](docs/demo/demo.gif)。
+
+| 简报 | 地图 | 线索板 |
+| --- | --- | --- |
+| ![简报](docs/screenshots/01-brief.jpeg) | ![地图](docs/screenshots/02-clueboard.jpeg) | ![线索板](docs/screenshots/07-chaingraph.jpeg) |
+
+更多截图（结局、收集册、设置、大字号、e2e 分支证据）见 [§4 当前进度](#4-当前进度)。
+
+### 0.5 自动化测试
+
+| 类别 | 数量 | 位置 / 命令 |
+| --- | --- | --- |
+| Hypium 单元测试（正常 6 / 边界 8 / 异常 8） | 22 | `harmony/entry/src/ohosTest/ets/test/`；IDE Run 或 `aa test`（见 `docs/03` §2） |
+| UI 演示流水线（主线 12 / 分支 7 / 存档 5） | 24 条断言 | `powershell -File tools/e2e.ps1 -Scenario all` |
+| 内容与规格校验（42 条判定用例） | 42 | `python tools/validate.py` |
+| 静态预检（配置/资源/符号/导入/生成物） | 8 项 | `python tools/preflight.py` |
+
+最近一次实测：Hypium **22/22**（[截图](docs/screenshots/hypium-run-22.png)、[日志](docs/evidence/hypium-aa-test.log)）、e2e **24/24**、`preflight` PASS 8、`validate` 42/42。
+用例逐条清单与「正常/边界/异常」归类见 [TestReport §1.1](docs/TestReport.md)。
+
+---
+
 ## 1. 文档与仓库结构
 
 ### 1.1 文档索引
@@ -36,7 +108,7 @@ campus-case/
 ├─ shared/               # 唯一内容源：case/（案件 JSON）+ fixtures/（42 条判定用例）
 │                        #   构建期复制进 harmony 的 rawfile，副本不入库
 ├─ harmony/              # DevEco 工程（ArkTS + ArkUI，交付对象）
-└─ tools/                # 同步 / 预检 / 校验 / 编译 / 演示流水线 / 图标生成
+└─ tools/                # 同步 / 预检 / 校验 / 编译 / 演示流水线 / 录屏 / 图标生成
 ```
 
 `shared/` 不允许出现任何平台代码；`harmony/` 不允许自己复制一份剧情。
@@ -233,3 +305,18 @@ DevEco Studio 直接 **File → Open → `E:\campus-case\harmony`**（选 `harmo
 - 内容副本：clone 下来 rawfile 里是空的，先跑一次 `tools/sync-case.ps1`，否则应用白屏
 
 下一步（可选加分项）：录一段 3 分钟演示、补美术/音效、把设置项接上真实开关。
+
+---
+
+## 7. 作业要求对照
+
+| 作业要求 | 现状 | 证据在哪 |
+| --- | --- | --- |
+| (1) ArkTS / ArkUI 应用，真实交互与业务逻辑 | ✅ | 12 节点判定引擎（门控/效果/互斥）、连线规则、两关验证、双结局互斥；`harmony/entry/src/main/ets/domain/` 为纯函数，视图只读状态发动作；录屏见 §0.4 |
+| (2) 核心数据持久化，杀进程后可恢复 | ✅ | Preferences（快照/设置）+ RDB 五表；`aa force-stop` 后重开仍停「已完结 100%」；`tools/e2e.ps1 -Scenario slots` 5/5 |
+| (3) 《软件需求说明书》：功能 / 模块 / 数据模型 / 接口 / 分工 / 测试 / 验收 | ✅ | [docs/01](docs/01-基础功能需求规格说明.md)：§2.2 功能总表、**§2.3 模块划分与接口**、**§2.4 分工**、§6 数据模型、§9 验收标准、§10 测试要求 |
+| (4) GitHub 协作：本人账号提交 | ✅ 独立完成 | 全部提交作者 `NaCl1Yan`（`git log --format='%h %an %s'`）；单人分工说明见 docs/01 §2.4.1；组队模板见 §2.4.2 |
+| (5) README 含功能 / 环境 / 截图 / 运行方法 + 真实录屏 + ≥6 条自动化测试（正常/边界/异常） | ✅ | 本 README §0.1–§0.5；录屏 `docs/demo/demo.gif`；Hypium 22 条 = 正常 6 / 边界 8 / 异常 8，逐条见 [TestReport §1.1](docs/TestReport.md) |
+
+> 补充：Android 版（Kotlin + Compose）早期做过，已按需求方决定冻结并归档在 tag `archive/android-v1`，`main` 只保留鸿蒙版，
+> 取回方式见 [03-编译与单测检查单 §8](docs/03-编译与单测检查单.md)。
