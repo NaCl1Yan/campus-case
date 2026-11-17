@@ -22,9 +22,10 @@ export class ProveCard {
  * 推理工坊（01 §FR-08）：每题选两条线索提交，错不惩罚、提示逐级解锁。
  *
  * 交互约定：
- * - 两道题可以**同时展开**（各自两排线索选项并排显示），不再是一开一合的手风琴；
- * - 每题的选择、提示等级、反馈都按题目 id 分开存，互不覆盖；
- * - 提交失败只提示，不扣分、不清选择。
+ * - 两道题可以**同时展开**，各自两列线索网格；
+ * - 每题的选择独立；
+ * - 提示**累积展示**：点了 2 次就把「提示 1」和「提示 2」同时列出来，不是只显示最后一条；
+ * - 提交反馈与提示分开显示，互不覆盖。
  */
 @Component
 export struct DeduceView {
@@ -36,14 +37,17 @@ export struct DeduceView {
   @State activeIds: string[] = [];
   @State pickedCardIds: string[] = [];
   @State pickedLists: string[][] = [];
-  @State noteIds: string[] = [];
-  @State noteTexts: string[] = [];
-  @State noteLevels: number[] = [];
+  // 每题已解锁到第几条提示
+  @State hintCardIds: string[] = [];
+  @State hintLevels: number[] = [];
+  // 每题最近一次提交的反馈
+  @State feedbackCardIds: string[] = [];
+  @State feedbackTexts: string[] = [];
 
   onSubmit: (stageId: string, picked: string[]) => void = () => {
   };
 
-  // ---------------------------------------------------------------- 每题独立状态
+  // ---------------------------------------------------------------- 展开 / 选择
 
   private isActive(cardId: string): boolean {
     return this.activeIds.includes(cardId);
@@ -87,34 +91,45 @@ export struct DeduceView {
     this.setPicked(cardId, current.concat([clueId]));
   }
 
-  private noteIndex(id: string): number {
-    return this.noteIds.indexOf(id);
+  // ---------------------------------------------------------------- 提示 / 反馈
+
+  private levelOf(cardId: string): number {
+    const i = this.hintCardIds.indexOf(cardId);
+    return i >= 0 ? this.hintLevels[i] : 0;
   }
 
-  private noteOf(id: string): string {
-    const i = this.noteIndex(id);
-    return i >= 0 ? this.noteTexts[i] : '';
-  }
-
-  private levelOf(id: string): number {
-    const i = this.noteIndex(id);
-    return i >= 0 ? this.noteLevels[i] : 0;
-  }
-
-  private setNote(id: string, text: string, level: number): void {
-    const i = this.noteIndex(id);
+  private setLevel(cardId: string, level: number): void {
+    const i = this.hintCardIds.indexOf(cardId);
     if (i >= 0) {
-      const texts: string[] = this.noteTexts.slice();
-      texts[i] = text;
-      this.noteTexts = texts;
-      const levels: number[] = this.noteLevels.slice();
+      const levels: number[] = this.hintLevels.slice();
       levels[i] = level;
-      this.noteLevels = levels;
+      this.hintLevels = levels;
       return;
     }
-    this.noteIds = this.noteIds.concat([id]);
-    this.noteTexts = this.noteTexts.concat([text]);
-    this.noteLevels = this.noteLevels.concat([level]);
+    this.hintCardIds = this.hintCardIds.concat([cardId]);
+    this.hintLevels = this.hintLevels.concat([level]);
+  }
+
+  private feedbackOf(cardId: string): string {
+    const i = this.feedbackCardIds.indexOf(cardId);
+    return i >= 0 ? this.feedbackTexts[i] : '';
+  }
+
+  private setFeedback(cardId: string, text: string): void {
+    const i = this.feedbackCardIds.indexOf(cardId);
+    if (i >= 0) {
+      const texts: string[] = this.feedbackTexts.slice();
+      texts[i] = text;
+      this.feedbackTexts = texts;
+      return;
+    }
+    this.feedbackCardIds = this.feedbackCardIds.concat([cardId]);
+    this.feedbackTexts = this.feedbackTexts.concat([text]);
+  }
+
+  private revealedHints(card: ProveCard): string[] {
+    const level = this.levelOf(card.id);
+    return card.hints.slice(0, level);
   }
 
   private clueName(id: string): string {
@@ -135,7 +150,7 @@ export struct DeduceView {
             .fontSize(22 * this.fs)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
-          Text('两道题可同时展开：每题选两条线索提交')
+          Text('两题可同时展开；提示会累计显示，点几次留几条')
             .fontSize(11.5 * this.fs)
             .fontColor($r('app.color.text_tertiary'))
         }
@@ -170,7 +185,6 @@ export struct DeduceView {
               .width('100%')
 
               if (this.isActive(card.id) && !card.passed) {
-                // 线索选项固定两列，四选项正好两排同时显示
                 Grid() {
                   ForEach(card.pool, (clueId: string) => {
                     GridItem() {
@@ -208,18 +222,19 @@ export struct DeduceView {
                     .enabled(this.pickedOf(card.id).length === 2)
                     .onClick(() => {
                       this.onSubmit(card.id, this.pickedOf(card.id));
-                      this.setNote(card.id, '已记录，看看结论对不对。', this.levelOf(card.id));
+                      this.setFeedback(card.id, '已记录，看看结论对不对。');
                     })
                   Button('提示')
                     .height(36)
                     .fontSize(12.5 * this.fs)
                     .backgroundColor($r('app.color.chip_bg'))
-                    .fontColor($r('app.color.brand_text'))
+                    .fontColor(this.levelOf(card.id) >= card.hints.length
+                      ? $r('app.color.text_tertiary') : $r('app.color.brand_text'))
                     .borderRadius(10)
+                    .enabled(this.levelOf(card.id) < card.hints.length)
                     .onClick(() => {
-                      const level = Math.min(this.levelOf(card.id) + 1, card.hints.length);
-                      const text = level > 0 ? `提示 ${level}/${card.hints.length}：${card.hints[level - 1]}` : '';
-                      this.setNote(card.id, text, level);
+                      const next = Math.min(this.levelOf(card.id) + 1, card.hints.length);
+                      this.setLevel(card.id, next);
                     })
                   Button('收起')
                     .height(36)
@@ -244,17 +259,35 @@ export struct DeduceView {
                   .borderRadius(10)
                   .onClick(() => {
                     this.toggleOpen(card.id);
-                    this.setNote(card.id, '', 0);
+                    this.setLevel(card.id, 0);
+                    this.setFeedback(card.id, '');
                   })
               }
 
-              if (this.noteOf(card.id).length > 0) {
-                Text(this.noteOf(card.id))
+              // 已解锁的提示逐条列出（累积，不覆盖）
+              if (this.revealedHints(card).length > 0) {
+                Column({ space: 4 }) {
+                  ForEach(this.revealedHints(card), (hint: string, index: number) => {
+                    Text(`提示 ${index + 1}/${card.hints.length}：${hint}`)
+                      .fontSize(11.5 * this.fs)
+                      .lineHeight(18)
+                      .width('100%')
+                      .fontColor($r('app.color.text_body'))
+                  }, (hint: string, index: number) => `${card.id}:${index}`)
+                }
+                .width('100%')
+                .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+                .backgroundColor($r('app.color.surface_alt'))
+                .borderRadius(10)
+                .alignItems(HorizontalAlign.Start)
+              }
+
+              if (this.feedbackOf(card.id).length > 0) {
+                Text(this.feedbackOf(card.id))
                   .fontSize(11.5 * this.fs)
-                  .lineHeight(18)
                   .fontColor($r('app.color.text_secondary'))
                   .width('100%')
-                  .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+                  .padding({ left: 10, right: 10, top: 6, bottom: 6 })
                   .backgroundColor($r('app.color.surface_alt'))
                   .borderRadius(10)
               }
@@ -265,7 +298,7 @@ export struct DeduceView {
             .borderRadius(16)
             .border({ width: 1, color: $r('app.color.border') })
           }
-        }, (card: ProveCard) => `${card.id}:${card.passed}`)
+        }, (card: ProveCard) => `${card.id}:${card.passed}:${this.levelOf(card.id)}`)
       }
       .layoutWeight(1)
       .width('100%')

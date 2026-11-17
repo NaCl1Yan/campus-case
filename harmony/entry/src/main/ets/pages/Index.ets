@@ -77,7 +77,14 @@ struct Index {
       this.contentVersion = this.caseFile().contentVersion;
       this.fontScale = await Prefs.getNumber(Prefs.KEY_FONT_SCALE, 1);
       this.themeMode = await Prefs.getString(Prefs.KEY_THEME, 'follow');
-      this.applyTheme(this.themeMode, false);
+      // 冷启动时立刻 setColorMode 会触发配置变更重建，导致 EntryAbility 前台化超时（系统判 LIFECYCLE_TIMEOUT 并杀进程）。
+      // 因此把「恢复上次主题」推迟到首帧之后执行；跟随系统时完全不动。
+      const storedMode: string = this.themeMode;
+      if (storedMode !== 'follow') {
+        setTimeout(() => {
+          this.applyTheme(storedMode, false);
+        }, 1500);
+      }
       this.refresh();
       if (this.mirror.stage === Stage.FINISHED) {
         this.view = 'ending';
