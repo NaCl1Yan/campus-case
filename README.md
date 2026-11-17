@@ -158,7 +158,7 @@ campus-case/
 | 动画（6 类） | ✅ 转场/进度环/获得/抖动/阶段/打字机 | ⬜ 冻结 |
 | 结局收集册 | ✅ RDB `t_ending_seen` + 页面，含解锁时间 | ⬜ 冻结 |
 | 设置 / 返回键 | ✅ 动画减弱、**字号三档**、清空进度、关于；子页拦截返回键 | ⬜ 冻结 |
-| Hypium 用例「执行」 | ⚠️ 需在 DevEco 里点 Run（CLI 下 Hypium 不推进，见 04 文档） | — |
+| Hypium 用例「执行」 | ✅ IDE Run 与 `aa test` 均 **22/22**（截图 `docs/screenshots/hypium-run-22.png`，日志 `docs/evidence/hypium-aa-test.log`） | — |
 
 **现在的样子**：
 

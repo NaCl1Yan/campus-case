@@ -36,7 +36,7 @@ f6c3039 feat(harmony): 删除存档二次确认、场景氛围色、内容校验
 
 | # | 事项 | 为什么 | 预计 |
 | --- | --- | --- | --- |
-| 1 | **在 DevEco 里跑一次 Hypium**：右键 `entry/src/ohosTest/ets/test` → Run 'Tests in test' | 22 个用例是作业「单元测试」项的唯一缺口（命令行下 Hypium 不推进，原因见 `docs/04`）；路径已迁到 ASCII，IDE 现在能直接打开 `E:\campus-case\harmony` | 2 分钟 |
+| 1 | ~~在 DevEco 里跑一次 Hypium~~ ✅ **2026-11-17 20:17 已完成：22/22，154 ms** | 见 §3.7；截图 `docs/screenshots/hypium-run-22.png` | — |
 | 2 | 录一段 3 分钟演示或导出 GIF 放 `docs/` | 交作业/答辩时不用现场点 | 半小时 |
 | 3 | 内容加料（可选）：第 5 个场景或第 3 个结局 | 分值上限更高，但要同步 02/05 与 fixtures | 半天 |
 | 4 | 代码注释与类图（可选） | 交作业时"设计说明"更完整 | 1 小时 |
@@ -111,7 +111,8 @@ DevEco 打开 `E:\校园推理galgame` 会直接弹 `Cannot Open Project: ... co
    runner 里的 `getAbilityDelegator()` 还必须放进 `onRun()`（模块顶层拿到 null）
 
 结果：`aa test` 与 IDE Run 都是 **22/22**
-（`Tests run: 22, Failure: 0, Error: 0, Pass: 22`，日志 `docs/evidence/hypium-aa-test.log`）。
+（`Tests run: 22, Failure: 0, Error: 0, Pass: 22`，日志 `docs/evidence/hypium-aa-test.log`，
+IDE 截图 `docs/screenshots/hypium-run-22.png`，154 ms）。
 
 ## 4. 今天踩过的坑（明天不用重复踩）
 | 坑 | 结论 |
