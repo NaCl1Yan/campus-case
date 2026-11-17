@@ -1,3 +1,5 @@
+import { ChainGraph, RuleEdge } from './ChainGraph';
+
 /** 线索卡数据（owned=false 时只显示占位与方向提示，不剧透）。 */
 export class ClueCardData {
   id: string;
@@ -29,6 +31,9 @@ export struct ClueBoardView {
   @Prop canDeduce: boolean = false;
   @Prop links: string[] = [];
   @Prop conclusions: string[] = [];
+  @Prop edges: RuleEdge[] = [];
+  @Prop chainBIds: string[] = [];
+  @Prop chainAIds: string[] = [];
   @State selected: string[] = [];
   @State shakeOffset: number = 0;
   @State message: string = '';
@@ -88,6 +93,12 @@ export struct ClueBoardView {
       Text(this.message.length > 0 ? this.message : '选两张线索，点「连线」验证它们之间有没有关系。')
         .fontSize(12)
         .fontColor(this.message.length > 0 ? '#B3261E' : '#9CA3AF')
+
+      ChainGraph({
+        edges: this.edges,
+        chainBIds: this.chainBIds,
+        chainAIds: this.chainAIds,
+      })
 
       if (this.conclusions.length > 0) {
         Column({ space: 4 }) {

@@ -22,6 +22,8 @@ export struct HudBar {
   };
   onGallery: () => void = () => {
   };
+  onBrief: () => void = () => {
+  };
   onSettings: () => void = () => {
   };
   onRestart: () => void = () => {
@@ -99,6 +101,12 @@ export struct HudBar {
             .borderRadius(10)
         }
         Blank()
+        Button('简报')
+          .fontSize(13)
+          .height(30)
+          .backgroundColor('#00000000')
+          .fontColor('#26324A')
+          .onClick(() => this.onBrief())
         Button('收集册')
           .fontSize(13)
           .height(30)

@@ -8,6 +8,7 @@ import { BriefView } from '../view/BriefView';
 import { HubView, SceneCard } from '../view/HubView';
 import { HotspotItem, SceneView } from '../view/SceneView';
 import { ClueBoardView, ClueCardData } from '../view/ClueBoardView';
+import { RuleEdge } from '../view/ChainGraph';
 import { DeduceView, ProveCard } from '../view/DeduceView';
 import { JudgeOption, JudgeView } from '../view/JudgeView';
 import { EndingView } from '../view/EndingView';
@@ -192,6 +193,18 @@ struct Index {
       p.id, p.question, Engine.canPublic(state) || Engine.canPrivate(state) ? '证据链已成立' : '还差一步',
       state.passedStages.includes(p.id), p.hints ?? [], state.ownedClues.slice().sort()
     ));
+  }
+
+  /** 规则连线状态（证据链图用）。 */
+  private ruleEdges(): RuleEdge[] {
+    const state = this.mirror;
+    return this.caseFile().rules.map((rule) =>
+      new RuleEdge(rule.inputs[0], rule.inputs[1], rule.id, state.flags.get(rule.grantsFlag) === true));
+  }
+
+  private chainIds(chainId: string): string[] {
+    const chain = this.caseFile().chains.find((c) => c.id === chainId);
+    return chain === undefined ? [] : chain.clueIds;
   }
 
   /** 已成立的规则结论（线索板用文字把推理链讲清楚）。 */
@@ -499,6 +512,7 @@ struct Index {
           onGallery: () => {
             this.openGallery();
           },
+          onBrief: () => this.nav('brief'),
           onSettings: () => this.nav('settings'),
           onRestart: () => this.askRestart(),
         })
@@ -546,6 +560,9 @@ struct Index {
               canDeduce: this.mirror.stage === Stage.DEDUCE || this.readyChip,
               links: [],
               conclusions: this.conclusions(),
+              edges: this.ruleEdges(),
+              chainBIds: this.chainIds('CH-B'),
+              chainAIds: this.chainIds('CH-A'),
               onLink: (a: string, b: string) => {
                 this.linkClues(a, b);
               },
