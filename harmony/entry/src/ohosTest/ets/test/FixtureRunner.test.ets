@@ -13,7 +13,8 @@ import { diffState, loadCase, stateFromPatch } from './TestSupport';
  * 强类型用例，逐条与期望比对。与 Android 侧 FixtureTest.kt 跑的是同一批 42 条。
  */
 export default function fixtureTest(): void {
-  describe('Fixtures(AC-18)', () => {
+  // Hypium 的 describe 值只允许字母/数字/下划线/点，且必须以字母开头（中文或括号会被判非法）
+  describe('Fixtures.AC18', () => {
     it('用例规模与生成物一致', 0, () => {
       const total = GATE_CASES.length + SCENE_CASES.length + APPLY_CASES.length +
         COMBINE_CASES.length + ENDING_CASES.length + PROGRESS_CASES.length + REPLAY_CASES.length;
