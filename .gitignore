@@ -41,6 +41,9 @@ desktop.ini
 *.log
 !docs/evidence/*.log
 
+# ---- 实验报告草稿（Word，不入库）----
+*.docx
+
 # ---- 临时草稿（允许存在但不入库）----
 scratch/
 tmp/
