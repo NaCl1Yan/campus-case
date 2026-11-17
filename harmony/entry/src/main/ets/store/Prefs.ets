@@ -14,6 +14,7 @@ export class Prefs {
   static readonly KEY_FONT_SCALE: string = 'settings.fontScale';
   static readonly KEY_SFX: string = 'settings.sfxOn';
   static readonly KEY_REDUCE_MOTION: string = 'settings.reduceMotion';
+  static readonly KEY_THEME: string = 'settings.theme';
 
   static async init(context: common.UIAbilityContext): Promise<void> {
     Prefs.store = await preferences.getPreferences(context, 'campus_case_pref');

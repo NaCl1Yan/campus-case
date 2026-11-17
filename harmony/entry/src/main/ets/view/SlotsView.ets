@@ -40,7 +40,7 @@ export struct SlotsView {
       },
       secondaryButton: {
         value: '覆盖',
-        fontColor: '#B3261E',
+        fontColor: $r('app.color.danger_text'),
         action: () => this.onSave(slotId),
       },
     });
@@ -57,7 +57,7 @@ export struct SlotsView {
       },
       secondaryButton: {
         value: '删除',
-        fontColor: '#B3261E',
+        fontColor: $r('app.color.danger_text'),
         action: () => this.onDelete(slotId),
       },
     });
@@ -65,13 +65,17 @@ export struct SlotsView {
 
   build() {
     Column({ space: 12 }) {
-      Text('存档')
-        .fontSize(20 * this.fs)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#111827')
-      Text('自动存档在每次调查后更新；手动槽用于回滚到某个时刻。')
-        .fontSize(12 * this.fs)
-        .fontColor('#9CA3AF')
+      Column({ space: 3 }) {
+        Text('存档')
+          .fontSize(22 * this.fs)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Text('自动槽每次调查后更新；手动槽用于回滚到某个时刻')
+          .fontSize(11.5 * this.fs)
+          .fontColor($r('app.color.text_tertiary'))
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
 
       List({ space: 10 }) {
         ForEach(this.rows, (row: SlotRow) => {
@@ -81,21 +85,22 @@ export struct SlotsView {
                 Text(row.title)
                   .fontSize(14 * this.fs)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#111827')
+                  .fontColor($r('app.color.text_primary'))
                 Blank()
                 Text(row.empty ? '空' : row.detail)
                   .fontSize(11 * this.fs)
-                  .fontColor(row.empty ? '#9CA3AF' : '#4B5563')
+                  .fontColor(row.empty ? $r('app.color.text_tertiary') : $r('app.color.text_body'))
               }
               .width('100%')
 
               Row({ space: 8 }) {
                 if (row.slotId > 0) {
                   Button(row.empty ? '存档' : '覆盖')
-                    .height(32)
+                    .height(34)
                     .fontSize(12 * this.fs)
-                    .backgroundColor('#EEF2F7')
-                    .fontColor('#26324A')
+                    .backgroundColor($r('app.color.chip_bg'))
+                    .fontColor($r('app.color.brand_text'))
+                    .borderRadius(10)
                     .enabled(this.canSave)
                     .onClick(() => {
                       if (row.empty) {
@@ -106,27 +111,29 @@ export struct SlotsView {
                     })
                 }
                 Button('读取')
-                  .height(32)
+                  .height(34)
                   .fontSize(12 * this.fs)
-                  .backgroundColor('#26324A')
+                  .backgroundColor($r('app.color.brand_solid'))
+                  .borderRadius(10)
                   .enabled(!row.empty)
                   .onClick(() => this.onLoad(row.slotId))
                 if (!row.empty) {
                   Button('删除')
-                    .height(32)
+                    .height(34)
                     .fontSize(12 * this.fs)
-                    .backgroundColor('#00000000')
-                    .fontColor('#B3261E')
+                    .backgroundColor($r('app.color.chip_bg'))
+                    .fontColor($r('app.color.danger_text'))
+                    .borderRadius(10)
                     .onClick(() => this.confirmDelete(row.slotId, row.title))
                 }
               }
               .width('100%')
             }
             .width('100%')
-            .padding(14)
-            .backgroundColor('#FFFFFF')
-            .borderRadius(12)
-            .border({ width: 1, color: '#E5E7EB' })
+            .padding(15)
+            .backgroundColor($r('app.color.surface'))
+            .borderRadius(16)
+            .border({ width: 1, color: $r('app.color.border') })
           }
         }, (row: SlotRow) => `${row.slotId}:${row.empty}:${row.detail}`)
       }
@@ -137,14 +144,14 @@ export struct SlotsView {
         .width('100%')
         .height(44)
         .fontSize(14 * this.fs)
-        .backgroundColor('#FFFFFF')
-        .fontColor('#B3261E')
-        .border({ width: 1, color: '#F3C1BE' })
+        .backgroundColor($r('app.color.surface'))
+        .fontColor($r('app.color.danger_text'))
+        .border({ width: 1, color: $r('app.color.danger_soft_border') })
         .onClick(() => this.onRestart())
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding({ left: 16, right: 16, top: 12, bottom: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 }

@@ -1,4 +1,4 @@
-import { common } from '@kit.AbilityKit';
+import { common, ConfigurationConstant } from '@kit.AbilityKit';
 import { CaseFile, ClueDef, NodeState, PlayerState, Stage } from '../domain/Types';
 import { Engine } from '../domain/Engine';
 import { GameController } from '../store/GameController';
@@ -17,6 +17,7 @@ import { GalleryRow, GalleryView } from '../view/GalleryView';
 import { SettingsView } from '../view/SettingsView';
 import { EndingRow } from '../store/CaseDb';
 import { Prefs } from '../store/Prefs';
+import { ThemeState } from '../store/ThemeState';
 
 /**
  * 单页应用 + 视图切换（01 §8.1 页面清单的落地）。
@@ -46,6 +47,8 @@ struct Index {
   @State contentVersion: number = 1;
   @State fontScale: number = 1;
   @State transitionFlag: boolean = false;
+  @State themeMode: string = 'follow';
+  @State themeKey: number = 0;
 
   private controller: GameController = GameController.I;
   private toastTimer: number = -1;
@@ -69,6 +72,8 @@ struct Index {
       this.reduceMotion = this.controller.reduceMotion;
       this.contentVersion = this.caseFile().contentVersion;
       this.fontScale = await Prefs.getNumber(Prefs.KEY_FONT_SCALE, 1);
+      this.themeMode = await Prefs.getString(Prefs.KEY_THEME, 'follow');
+      this.applyTheme(this.themeMode, false);
       this.refresh();
       if (this.mirror.stage === Stage.FINISHED) {
         this.view = 'ending';
@@ -119,6 +124,38 @@ struct Index {
         this.toastTimer = -1;
       }
     }, 2200);
+  }
+
+  /** 外观：follow/light/dark。setColorMode 会触发配置变更重绘，themeKey 用于让 Canvas 重画。 */
+  private applyTheme(mode: string, persist: boolean): void {
+    this.themeMode = mode;
+    this.themeKey = this.themeKey + 1;
+    if (persist) {
+      Prefs.putString(Prefs.KEY_THEME, mode);
+    }
+    // setColorMode 会触发 Ability 重建：只有「用户主动切换」或「本进程首次应用非跟随主题」时才调用。
+    // - bootstrap 且 mode=follow：完全不动系统主题，避免无谓重建；
+    // - bootstrap 且 mode=light/dark：本进程首次需要应用一次，之后不再重复（否则重建循环）。
+    const needApply = persist || (!ThemeState.applied && mode !== 'follow');
+    if (!needApply) {
+      ThemeState.applied = true;
+      ThemeState.current = mode;
+      return;
+    }
+    ThemeState.applied = true;
+    ThemeState.current = mode;
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      let colorMode: ConfigurationConstant.ColorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET;
+      if (mode === 'dark') {
+        colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK;
+      } else if (mode === 'light') {
+        colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT;
+      }
+      context.getApplicationContext().setColorMode(colorMode);
+    } catch (e) {
+      console.error(`[campus] setColorMode failed: ${e}`);
+    }
   }
 
   private nav(view: string): void {
@@ -432,7 +469,7 @@ struct Index {
       },
       secondaryButton: {
         value: '重开',
-        fontColor: '#B3261E',
+        fontColor: $r('app.color.danger_text'),
         action: () => {
           this.restartGame();
         },
@@ -490,7 +527,7 @@ struct Index {
       if (!this.ready) {
         Column({ space: 10 }) {
           LoadingProgress().width(48).height(48)
-          Text('正在读取案件与进度…').fontSize(13).fontColor('#6B7280')
+          Text('正在读取案件与进度…').fontSize(13).fontColor($r('app.color.text_secondary'))
         }
         .width('100%')
         .height('100%')
@@ -569,6 +606,7 @@ struct Index {
               links: [],
               conclusions: this.conclusions(),
               edges: this.ruleEdges(),
+              themeKey: this.themeKey,
               chainBIds: this.chainIds('CH-B'),
               chainAIds: this.chainIds('CH-A'),
               onLink: (a: string, b: string) => {
@@ -618,6 +656,10 @@ struct Index {
                 `${this.controller.validationErrors.length} 个问题`,
               fontScale: this.fontScale,
               restoredFrom: this.controller.restoredFrom,
+              themeMode: this.themeMode,
+              onThemeMode: (mode: string) => {
+                this.applyTheme(mode, true);
+              },
               onToggleReduceMotion: (value: boolean) => {
                 this.controller.setReduceMotion(value);
                 this.reduceMotion = value;
@@ -652,48 +694,65 @@ struct Index {
         .animation({ duration: 220, curve: Curve.EaseOut })
 
         if (this.view !== 'ending') {
-          Row({ space: 10 }) {
-            Button('线索板')
-            .layoutWeight(1)
-            .height(44)
-            .fontSize(14)
-            .backgroundColor('#EEF2F7')
-            .fontColor('#26324A')
-            .onClick(() => this.nav('board'))
-          Button('推理工坊')
-            .layoutWeight(1)
-            .height(44)
-            .fontSize(14)
-            .backgroundColor('#EEF2F7')
-            .fontColor('#26324A')
-            .onClick(() => this.nav('deduce'))
-          Button(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '去判断' : '判断')
-            .layoutWeight(1)
-            .height(44)
-            .fontSize(14)
-            .backgroundColor(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '#B3261E' : '#E5E7EB')
-            .fontColor(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '#FFFFFF' : '#9CA3AF')
-            .enabled(this.readyChip && this.mirror.stage !== Stage.FINISHED)
-            .onClick(() => {
-              if (this.readyChip && this.mirror.stage !== Stage.FINISHED) {
-                this.openJudge();
-              } else {
-                this.showToast('证据链还没成立，先去把线索连起来');
-              }
-            })
-        }
-        .width('100%')
-          .padding({ left: 16, right: 16, top: 8, bottom: 12 })
-          .backgroundColor('#FFFFFF')
-          .border({ width: { top: 1 }, color: '#E5E7EB' })
+          Row({ space: 8 }) {
+            Text('地图')
+              .fontSize(13 * this.fontScale)
+              .fontColor(this.view === 'hub' || this.view === 'brief' ? $r('app.color.on_brand') : $r('app.color.brand_text'))
+              .layoutWeight(1)
+              .height(44)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(this.view === 'hub' || this.view === 'brief' ? $r('app.color.brand_solid') : $r('app.color.chip_bg'))
+              .borderRadius(13)
+              .onClick(() => this.nav(this.mirror.stage === Stage.PROLOGUE || this.mirror.stage === Stage.ACCEPT ? 'brief' : 'hub'))
+            Text('线索板')
+              .fontSize(13 * this.fontScale)
+              .fontColor(this.view === 'board' ? $r('app.color.on_brand') : $r('app.color.brand_text'))
+              .layoutWeight(1)
+              .height(44)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(this.view === 'board' ? $r('app.color.brand_solid') : $r('app.color.chip_bg'))
+              .borderRadius(13)
+              .onClick(() => this.nav('board'))
+            Text('推理')
+              .fontSize(13 * this.fontScale)
+              .fontColor(this.view === 'deduce' ? $r('app.color.on_brand') : $r('app.color.brand_text'))
+              .layoutWeight(1)
+              .height(44)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(this.view === 'deduce' ? $r('app.color.brand_solid') : $r('app.color.chip_bg'))
+              .borderRadius(13)
+              .onClick(() => this.nav('deduce'))
+            Text(this.readyChip && this.mirror.stage !== Stage.FINISHED ? '去判断' : '判断')
+              .fontSize(13 * this.fontScale)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.readyChip && this.mirror.stage !== Stage.FINISHED
+                ? $r('app.color.on_brand') : $r('app.color.text_secondary'))
+              .layoutWeight(1)
+              .height(44)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(this.readyChip && this.mirror.stage !== Stage.FINISHED
+                ? $r('app.color.brand_solid') : $r('app.color.surface_muted'))
+              .borderRadius(13)
+              .onClick(() => {
+                if (this.readyChip && this.mirror.stage !== Stage.FINISHED) {
+                  this.openJudge();
+                } else {
+                  this.showToast('证据链还没成立，先去把线索连起来');
+                }
+              })
+          }
+          .width('100%')
+          .padding({ left: 16, right: 16, top: 10, bottom: 14 })
+          .backgroundColor($r('app.color.surface'))
+          .border({ width: { top: 1 }, color: $r('app.color.border') })
         }
       }
 
       if (this.toast.length > 0) {
         Text(this.toast)
           .fontSize(13)
-          .fontColor('#FFFFFF')
-          .backgroundColor('#374151')
+          .fontColor($r('app.color.on_toast'))
+          .backgroundColor($r('app.color.toast_bg'))
           .padding({ left: 16, right: 16, top: 10, bottom: 10 })
           .borderRadius(20)
           .margin({ bottom: 90 })
@@ -705,6 +764,6 @@ struct Index {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FDFDFD')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

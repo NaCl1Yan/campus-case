@@ -52,13 +52,26 @@ export struct DeduceView {
 
   build() {
     Column({ space: 12 }) {
-      Text('推理工坊')
-        .fontSize(20 * this.fs)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#111827')
-      Text('证据不会自己说话。选两条线索，把它们放进这一问里。')
-        .fontSize(12 * this.fs)
-        .fontColor('#9CA3AF')
+      Row({ space: 8 }) {
+        Column({ space: 3 }) {
+          Text('推理工坊')
+            .fontSize(22 * this.fs)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+          Text('证据不会自己说话：选两条线索放进这一问')
+            .fontSize(11.5 * this.fs)
+            .fontColor($r('app.color.text_tertiary'))
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+        Text(`${this.cards.filter((c: ProveCard) => c.passed).length} / ${this.cards.length} 已通过`)
+          .fontSize(11.5 * this.fs)
+          .fontColor($r('app.color.brand_text'))
+          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+          .backgroundColor($r('app.color.chip_bg'))
+          .borderRadius(10)
+      }
+      .width('100%')
 
       List({ space: 12 }) {
         ForEach(this.cards, (card: ProveCard) => {
@@ -68,11 +81,14 @@ export struct DeduceView {
                 Text(card.question)
                   .fontSize(14 * this.fs)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#111827')
+                  .fontColor($r('app.color.text_primary'))
                   .layoutWeight(1)
                 Text(card.passed ? '已通过' : '待验证')
-                  .fontSize(11 * this.fs)
-                  .fontColor(card.passed ? '#2E7D32' : '#B3261E')
+                  .fontSize(10.5 * this.fs)
+                  .fontColor(card.passed ? $r('app.color.on_brand') : $r('app.color.brand_text'))
+                  .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                  .backgroundColor(card.passed ? $r('app.color.success_solid') : $r('app.color.chip_bg'))
+                  .borderRadius(8)
               }
               .width('100%')
 
@@ -81,8 +97,8 @@ export struct DeduceView {
                   ForEach(card.pool, (clueId: string) => {
                     Text(this.clueName(clueId))
                       .fontSize(12 * this.fs)
-                      .fontColor(this.picked.includes(clueId) ? '#FFFFFF' : '#26324A')
-                      .backgroundColor(this.picked.includes(clueId) ? '#26324A' : '#EEF2F7')
+                      .fontColor(this.picked.includes(clueId) ? $r('app.color.on_brand') : $r('app.color.brand_text'))
+                      .backgroundColor(this.picked.includes(clueId) ? $r('app.color.brand_solid') : $r('app.color.chip_bg'))
                       .padding({ left: 10, right: 10, top: 6, bottom: 6 })
                       .borderRadius(14)
                       .margin(4)
@@ -92,20 +108,23 @@ export struct DeduceView {
                 .width('100%')
 
                 Row({ space: 8 }) {
-                  Button('提交')
-                    .height(34)
-                    .fontSize(13 * this.fs)
-                    .backgroundColor('#26324A')
+                  Button(this.picked.length === 2 ? '提交这一问' : `已选 ${this.picked.length} / 2`)
+                    .height(36)
+                    .fontSize(12.5 * this.fs)
+                    .fontColor(this.picked.length === 2 ? $r('app.color.on_brand') : $r('app.color.text_tertiary'))
+                    .backgroundColor(this.picked.length === 2 ? $r('app.color.brand_solid') : $r('app.color.surface_muted'))
+                    .borderRadius(10)
                     .enabled(this.picked.length === 2)
                     .onClick(() => {
                       this.onSubmit(card.id, this.picked);
                       this.feedback = '已提交，看看结论对不对。';
                     })
                   Button('提示')
-                    .height(34)
-                    .fontSize(13 * this.fs)
-                    .backgroundColor('#EEF2F7')
-                    .fontColor('#26324A')
+                    .height(36)
+                    .fontSize(12.5 * this.fs)
+                    .backgroundColor($r('app.color.chip_bg'))
+                    .fontColor($r('app.color.brand_text'))
+                    .borderRadius(10)
                     .onClick(() => {
                       const level = Math.min(this.hintLevel + 1, card.hints.length);
                       this.hintLevel = level;
@@ -116,14 +135,15 @@ export struct DeduceView {
               } else if (card.passed) {
                 Text(`结论：${card.answerHint}`)
                   .fontSize(12 * this.fs)
-                  .fontColor('#2E7D32')
+                  .fontColor($r('app.color.success_text'))
                   .lineHeight(19)
               } else {
                 Button('开始这一问')
-                  .height(34)
-                  .fontSize(13 * this.fs)
-                  .backgroundColor('#EEF2F7')
-                  .fontColor('#26324A')
+                  .height(36)
+                  .fontSize(12.5 * this.fs)
+                  .backgroundColor($r('app.color.chip_bg'))
+                  .fontColor($r('app.color.brand_text'))
+                  .borderRadius(10)
                   .onClick(() => {
                     this.active = card.id;
                     this.picked = [];
@@ -135,14 +155,14 @@ export struct DeduceView {
               if (this.feedback.length > 0 && this.active === card.id) {
                 Text(this.feedback)
                   .fontSize(11 * this.fs)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_secondary'))
               }
             }
             .width('100%')
-            .padding(14)
-            .backgroundColor('#FFFFFF')
-            .borderRadius(12)
-            .border({ width: 1, color: '#E5E7EB' })
+            .padding(15)
+            .backgroundColor($r('app.color.surface'))
+            .borderRadius(16)
+            .border({ width: 1, color: $r('app.color.border') })
           }
         }, (card: ProveCard) => `${card.id}:${card.passed}`)
       }
@@ -151,7 +171,7 @@ export struct DeduceView {
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding({ left: 16, right: 16, top: 12, bottom: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 }

@@ -15,7 +15,7 @@ export class HotspotItem {
   }
 }
 
-/** 场景内（01 §FR-03/05）：热点列表 + 打字机正文 + 已调查/已封锁可见。 */
+/** 场景内（01 §FR-03/05）：氛围色带 + 热点卡片 + 打字机正文 + 已调查/已封锁可见。 */
 @Component
 export struct SceneView {
   @Prop fs: number = 1;
@@ -70,31 +70,31 @@ export struct SceneView {
     }, 24);
   }
 
-  /** 场景氛围色（warm/cold/neon/dim），替代美术背景，纯色块 + 顶部标题带。 */
-  private fxColor(): string {
+  /** 场景氛围色（warm/cold/neon/dim），替代美术背景；深浅色由资源自动切换。 */
+  private fxColor(): ResourceColor {
     if (this.sceneFx === 'cold') {
-      return '#E8EEF6';
+      return $r('app.color.cool_soft');
     }
     if (this.sceneFx === 'neon') {
-      return '#EDEAF6';
+      return $r('app.color.calm_soft');
     }
     if (this.sceneFx === 'dim') {
-      return '#E6E8EC';
+      return $r('app.color.neutral_soft');
     }
-    return '#FBF3E4';
+    return $r('app.color.warm_soft');
   }
 
-  private stateColor(state: string): string {
+  private stateColor(state: string): ResourceColor {
     if (state === 'AVAILABLE') {
-      return '#26324A';
+      return $r('app.color.brand_text');
     }
     if (state === 'DONE') {
-      return '#6B7280';
+      return $r('app.color.text_secondary');
     }
     if (state === 'CLOSED') {
-      return '#B3261E';
+      return $r('app.color.danger_text');
     }
-    return '#9CA3AF';
+    return $r('app.color.text_tertiary');
   }
 
   private stateLabel(state: string): string {
@@ -111,64 +111,104 @@ export struct SceneView {
   }
 
   build() {
-    Column({ space: 10 }) {
-      Row() {
-        Blank()
+    Column({ space: 12 }) {
+      // 场景头部：标题 + 氛围色带
+      Column({ space: 6 }) {
+        Row({ space: 8 }) {
+          Text('场景')
+            .fontSize(11 * this.fs)
+            .fontColor($r('app.color.text_tertiary'))
+            .letterSpacing(1)
+          Blank()
+          Row({ space: 4 }) {
+            Text(`${this.hotspots.filter((h: HotspotItem) => h.done).length}`)
+              .fontSize(12 * this.fs)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.brand_text'))
+            Text(`/ ${this.hotspots.length} 已调查`)
+              .fontSize(11 * this.fs)
+              .fontColor($r('app.color.text_tertiary'))
+          }
+        }
+        .width('100%')
+
+        Text(this.sceneName)
+          .fontSize(22 * this.fs)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Text(this.sceneDesc)
+          .fontSize(12.5 * this.fs)
+          .lineHeight(19)
+          .fontColor($r('app.color.text_secondary'))
       }
       .width('100%')
-      .height(6)
+      .padding({ left: 14, right: 14, top: 12, bottom: 14 })
       .backgroundColor(this.fxColor())
-      .borderRadius(3)
-
-      Text(this.sceneName)
-        .fontSize(20 * this.fs)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#111827')
-      Text(this.sceneDesc)
-        .fontSize(12 * this.fs)
-        .fontColor('#6B7280')
+      .borderRadius(16)
+      .alignItems(HorizontalAlign.Start)
 
       if (this.bodyTitle.length > 0) {
         Column({ space: 6 }) {
           Text(this.bodyTitle)
             .fontSize(14 * this.fs)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#26324A')
+            .fontColor($r('app.color.brand_text'))
           Text(this.shown)
             .fontSize(13 * this.fs)
-            .lineHeight(21)
-            .fontColor('#374151')
+            .lineHeight(22)
+            .fontColor($r('app.color.text_body'))
         }
         .width('100%')
-        .padding(12)
-        .backgroundColor('#FFFFFF')
-        .borderRadius(10)
-        .border({ width: 1, color: '#E5E7EB' })
+        .padding(14)
+        .backgroundColor($r('app.color.surface'))
+        .borderRadius(16)
+        .border({ width: 1, color: $r('app.color.border') })
+        .alignItems(HorizontalAlign.Start)
         .transition(TransitionEffect.OPACITY.animation({ duration: 220 }))
       }
 
-      Text('可调查的地方')
-        .fontSize(13 * this.fs)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#26324A')
+      Row() {
+        Text('可调查的地方')
+          .fontSize(13 * this.fs)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text('点一下开始调查')
+          .fontSize(11 * this.fs)
+          .fontColor($r('app.color.text_tertiary'))
+      }
+      .width('100%')
 
       List({ space: 10 }) {
         ForEach(this.hotspots, (item: HotspotItem) => {
           ListItem() {
-            Row() {
-              Text(item.title)
-                .fontSize(14 * this.fs)
-                .fontColor(this.stateColor(item.state))
-                .layoutWeight(1)
+            Row({ space: 10 }) {
+              Column({ space: 3 }) {
+                Text(item.title)
+                  .fontSize(14.5 * this.fs)
+                  .fontWeight(item.done ? FontWeight.Normal : FontWeight.Medium)
+                  .fontColor(this.stateColor(item.state))
+                Text(item.hint)
+                  .fontSize(11 * this.fs)
+                  .fontColor($r('app.color.text_tertiary'))
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
+
               Text(this.stateLabel(item.state))
                 .fontSize(11 * this.fs)
                 .fontColor(this.stateColor(item.state))
+                .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                .backgroundColor($r('app.color.chip_bg'))
+                .borderRadius(8)
             }
             .width('100%')
-            .padding(14)
-            .backgroundColor(item.done ? '#F3F4F6' : '#FFFFFF')
-            .borderRadius(10)
-            .border({ width: 1, color: '#E5E7EB' })
+            .padding({ left: 14, right: 12, top: 12, bottom: 12 })
+            .backgroundColor(item.done ? $r('app.color.surface_muted') : $r('app.color.surface'))
+            .borderRadius(14)
+            .border({ width: 1, color: $r('app.color.border') })
             .onClick(() => {
               this.onTap(item.nodeId);
             })
@@ -177,10 +217,11 @@ export struct SceneView {
       }
       .layoutWeight(1)
       .width('100%')
+      .scrollBar(BarState.Off)
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding({ left: 16, right: 16, top: 12, bottom: 8 })
     .alignItems(HorizontalAlign.Start)
     .translate({ x: this.shaking ? 6 : 0 })
   }

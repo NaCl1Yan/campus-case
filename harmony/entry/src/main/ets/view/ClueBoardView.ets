@@ -33,6 +33,7 @@ export struct ClueBoardView {
   @Prop links: string[] = [];
   @Prop conclusions: string[] = [];
   @Prop edges: RuleEdge[] = [];
+  @Prop themeKey: number = 0;
   @Prop chainBIds: string[] = [];
   @Prop chainAIds: string[] = [];
   @State selected: string[] = [];
@@ -74,36 +75,67 @@ export struct ClueBoardView {
 
   build() {
     Column({ space: 10 }) {
-      Row() {
-        Text('线索板')
-          .fontSize(20 * this.fs)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#111827')
-        Blank()
+      Row({ space: 8 }) {
+        Column({ space: 2 }) {
+          Text('线索板')
+            .fontSize(22 * this.fs)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
+          Text('选两张线索验证关系，连对即得结论')
+            .fontSize(11.5 * this.fs)
+            .fontColor($r('app.color.text_tertiary'))
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
         Text(`${this.cards.filter((c: ClueCardData) => c.owned).length} / ${this.cards.length}`)
-          .fontSize(12 * this.fs)
-          .fontColor('#6B7280')
+          .fontSize(13 * this.fs)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.brand_text'))
+          .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+          .backgroundColor($r('app.color.chip_bg'))
+          .borderRadius(10)
       }
       .width('100%')
 
-      Row({ space: 12 }) {
-        Text(`行动线 ${this.chainBText}`)
-          .fontSize(12 * this.fs)
-          .fontColor('#4B5563')
-        Text(`动机线 ${this.chainAText}`)
-          .fontSize(12 * this.fs)
-          .fontColor('#4B5563')
+      Row({ space: 8 }) {
+        Row({ space: 4 }) {
+          Text('行动线')
+            .fontSize(11 * this.fs)
+            .fontColor($r('app.color.text_tertiary'))
+          Text(this.chainBText)
+            .fontSize(11.5 * this.fs)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_body'))
+        }
+        .padding({ left: 9, right: 9, top: 4, bottom: 4 })
+        .backgroundColor($r('app.color.chip_bg'))
+        .borderRadius(9)
+
+        Row({ space: 4 }) {
+          Text('动机线')
+            .fontSize(11 * this.fs)
+            .fontColor($r('app.color.text_tertiary'))
+          Text(this.chainAText)
+            .fontSize(11.5 * this.fs)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_body'))
+        }
+        .padding({ left: 9, right: 9, top: 4, bottom: 4 })
+        .backgroundColor($r('app.color.chip_bg'))
+        .borderRadius(9)
+        Blank()
       }
       .width('100%')
 
       Text(this.message.length > 0 ? this.message : '选两张线索，点「连线」验证它们之间有没有关系。')
         .fontSize(12 * this.fs)
-        .fontColor(this.message.length > 0 ? '#B3261E' : '#9CA3AF')
+        .fontColor(this.message.length > 0 ? $r('app.color.danger_text') : $r('app.color.text_tertiary'))
 
       ChainGraph({
         edges: this.edges,
         chainBIds: this.chainBIds,
         chainAIds: this.chainAIds,
+        themeKey: this.themeKey,
       })
 
       if (this.conclusions.length > 0) {
@@ -111,17 +143,17 @@ export struct ClueBoardView {
           Text('已成立的结论')
             .fontSize(12 * this.fs)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#2E7D32')
+            .fontColor($r('app.color.success_text'))
           ForEach(this.conclusions, (text: string, index: number) => {
             Text(`${index + 1}. ${text}`)
               .fontSize(11 * this.fs)
               .lineHeight(18)
-              .fontColor('#374151')
+              .fontColor($r('app.color.text_body'))
           }, (text: string, index: number) => `${index}:${text}`)
         }
         .width('100%')
         .padding(10)
-        .backgroundColor('#F1F8F2')
+        .backgroundColor($r('app.color.success_soft'))
         .borderRadius(10)
         .alignItems(HorizontalAlign.Start)
       }
@@ -131,32 +163,33 @@ export struct ClueBoardView {
           GridItem() {
             Column({ space: 4 }) {
               Text(card.owned ? card.name : '? ? ?')
-                .fontSize(13 * this.fs)
+                .fontSize(12.5 * this.fs)
                 .fontWeight(FontWeight.Medium)
-                .fontColor(card.owned ? '#111827' : '#9CA3AF')
-                .maxLines(1)
+                .fontColor(card.owned ? $r('app.color.text_primary') : $r('app.color.text_tertiary'))
+                .maxLines(2)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
               Text(card.owned ? card.typeLabel : card.hint)
                 .fontSize(10 * this.fs)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.text_secondary'))
                 .maxLines(2)
               if (card.linked) {
                 Text('已连')
                   .fontSize(9 * this.fs)
-                  .fontColor('#FFFFFF')
-                  .backgroundColor('#2E7D32')
+                  .fontColor($r('app.color.on_brand'))
+                  .backgroundColor($r('app.color.success_solid'))
                   .padding({ left: 5, right: 5, top: 1, bottom: 1 })
                   .borderRadius(6)
               }
             }
             .width('100%')
-            .height(86)
+            .height(90)
             .padding(8)
             .justifyContent(FlexAlign.Center)
-            .backgroundColor(card.owned ? '#FFFFFF' : '#F3F4F6')
-            .borderRadius(10)
+            .backgroundColor(card.owned ? $r('app.color.surface') : $r('app.color.surface_muted'))
+            .borderRadius(14)
             .border({
               width: this.isSelected(card.id) ? 2 : 1,
-              color: this.isSelected(card.id) ? '#26324A' : '#E5E7EB',
+              color: this.isSelected(card.id) ? $r('app.color.brand_text') : $r('app.color.border'),
             })
             .onClick(() => {
               if (!card.owned) {
@@ -177,12 +210,15 @@ export struct ClueBoardView {
       .translate({ x: this.shakeOffset })
 
       Row({ space: 10 }) {
-        Button('连线')
+        Text(this.selected.length === 2 ? '连线' : `已选 ${this.selected.length} / 2`)
+          .fontSize(14 * this.fs)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.selected.length === 2 ? $r('app.color.on_brand') : $r('app.color.text_tertiary'))
           .layoutWeight(1)
-          .height(42)
-          .fontSize(15 * this.fs)
-          .backgroundColor('#26324A')
-          .enabled(this.selected.length === 2)
+          .height(46)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(this.selected.length === 2 ? $r('app.color.brand_solid') : $r('app.color.surface_muted'))
+          .borderRadius(14)
           .onClick(() => {
             if (this.selected.length !== 2) {
               return;
@@ -190,20 +226,26 @@ export struct ClueBoardView {
             this.onLink(this.selected[0], this.selected[1]);
             this.selected = [];
           })
-        Button('去验证')
+        Text('去验证')
+          .fontSize(14 * this.fs)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(this.canDeduce ? $r('app.color.on_brand') : $r('app.color.text_tertiary'))
           .layoutWeight(1)
-          .height(42)
-          .fontSize(15 * this.fs)
-          .backgroundColor(this.canDeduce ? '#2E7D32' : '#E5E7EB')
-          .fontColor(this.canDeduce ? '#FFFFFF' : '#9CA3AF')
-          .enabled(this.canDeduce)
-          .onClick(() => this.onDeduce())
+          .height(46)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(this.canDeduce ? $r('app.color.success_solid') : $r('app.color.surface_muted'))
+          .borderRadius(14)
+          .onClick(() => {
+            if (this.canDeduce) {
+              this.onDeduce();
+            }
+          })
       }
       .width('100%')
     }
     .width('100%')
     .height('100%')
-    .padding(16)
+    .padding({ left: 16, right: 16, top: 12, bottom: 8 })
     .alignItems(HorizontalAlign.Start)
   }
 }
