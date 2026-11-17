@@ -1,8 +1,9 @@
 # 进度与明日待办
 ## 《钟楼七点》鸿蒙版 · 2026-11-16 收工快照
 
-> 最近更新：2026-11-17 19:05（Asia/Shanghai）
+> 最近更新：2026-11-17 19:45（Asia/Shanghai）
 > 分支：`main`；里程碑 tag：`v0.9.0-playable`（后续改动已在其后追加）
+> 仓库位置：**`E:\campus-case`**（2026-11-17 从 `E:\校园推理galgame` 迁出，见 §3.6）
 
 ---
 
@@ -35,7 +36,7 @@ f6c3039 feat(harmony): 删除存档二次确认、场景氛围色、内容校验
 
 | # | 事项 | 为什么 | 预计 |
 | --- | --- | --- | --- |
-| 1 | **在 DevEco 里跑一次 Hypium**：右键 `entry/src/ohosTest/ets/test` → Run 'Tests in test' | 22 个用例是作业「单元测试」项的唯一缺口（命令行下 Hypium 不推进，原因见 `docs/04`） | 2 分钟 |
+| 1 | **在 DevEco 里跑一次 Hypium**：右键 `entry/src/ohosTest/ets/test` → Run 'Tests in test' | 22 个用例是作业「单元测试」项的唯一缺口（命令行下 Hypium 不推进，原因见 `docs/04`）；路径已迁到 ASCII，IDE 现在能直接打开 `E:\campus-case\harmony` | 2 分钟 |
 | 2 | 录一段 3 分钟演示或导出 GIF 放 `docs/` | 交作业/答辩时不用现场点 | 半小时 |
 | 3 | 内容加料（可选）：第 5 个场景或第 3 个结局 | 分值上限更高，但要同步 02/05 与 fixtures | 半天 |
 | 4 | 代码注释与类图（可选） | 交作业时"设计说明"更完整 | 1 小时 |
@@ -66,7 +67,7 @@ powershell -File tools/build-harmony.ps1
 
 ```powershell
 $hdc = 'D:\huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
-$hap = "$env:LOCALAPPDATA\campus-case-build\harmony\entry\build\default\outputs\default\entry-default-unsigned.hap"
+$hap = 'E:\campus-case\harmony\entry\build\default\outputs\default\entry-default-unsigned.hap'
 & $hdc install -r $hap
 & $hdc shell aa start -a EntryAbility -b com.nacl1yan.campuscase
 ```
@@ -88,11 +89,23 @@ $hap = "$env:LOCALAPPDATA\campus-case-build\harmony\entry\build\default\outputs\
 - `e2e.ps1` 每个场景先固定字号 1.0，且点击失败会自动滚动重试；三段链路回归 24/24
 - 新增截图：10-brief-1.5、11-board-1.5
 
+### 3.6 迁移到纯 ASCII 路径（2026-11-17 19:30，解锁 DevEco）
+
+DevEco 打开 `E:\校园推理galgame` 会直接弹 `Cannot Open Project: ... contain chinese characters`，
+这是 hvigor 的硬限制，跟配置无关。
+
+- 仓库整体 `Move-Item` 到 **`E:\campus-case`**：`.git` 一并搬走，remote / 分支 / 历史不变（搬之前 `git status` 是干净的）
+- `tools/build-harmony.ps1` 改为**原地构建**，产物 `harmony/entry/build/default/outputs/default/entry-default-unsigned.hap`；
+  只有仓库又落在非 ASCII 路径时才自动 robocopy 到 `%LOCALAPPDATA%\campus-case-build`（`-Mirror` 可强制走镜像）
+- 迁移后回归：`build-harmony.ps1` → 双模块 BUILD SUCCESSFUL / `RESULT: PASS`；HAP 重装模拟器 + `e2e.ps1 -Scenario all` → **24/24**
+- IDE 入口：`File → Open → E:\campus-case\harmony`（选 `harmony` 子目录，不是仓库根）
+- 文档里的旧路径已同步：`docs/04`（路径说明）、`README`（§5 提示 + §6.2 IDE 入口）、`TestReport`
+
 ## 4. 今天踩过的坑（明天不用重复踩）
 
 | 坑 | 结论 |
 | --- | --- |
-| hvigor 拒绝中文路径 | 必须走 `tools/build-harmony.ps1` 镜像到 `%LOCALAPPDATA%\campus-case-build` |
+| hvigor / DevEco 拒绝中文路径 | 仓库已迁到 `E:\campus-case`；`build-harmony.ps1` **原地构建**，只有非 ASCII 路径才自动镜像到 `%LOCALAPPDATA%\campus-case-build` |
 | ArkUI `ForEach` 同 key 不重建 | key 里必须并入状态字段，否则列表状态不刷新 |
 | API 12 的 `animateTo`/`AlertDialog` | 走 `this.getUIContext().animateTo / showAlertDialog` |
 | 流水回放还原不了 JUDGE/ENDING | 恢复顺序：自动槽 → Preferences 快照 → 回放 |

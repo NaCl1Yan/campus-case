@@ -189,7 +189,9 @@ powershell -File tools/ui-tap.ps1 -Text "接下这桩案子"
 powershell -File tools/ui-tap.ps1 -Dump
 ```
 
-> **中文路径限制**：hvigor 拒绝含中文的工程路径，`build-harmony.ps1` 会镜像到 `%LOCALAPPDATA%\campus-case-build` 再构建。
+> **路径要求**：hvigor 拒绝含中文的工程路径（`Invalid project path`），仓库已迁到纯 ASCII 的 `E:\campus-case`，
+> 所以 `build-harmony.ps1` 现在**原地构建**（产物 `harmony/entry/build`）；万一仓库又落在中文路径下，
+> 脚本会自动镜像到 `%LOCALAPPDATA%\campus-case-build` 再构建。
 
 演示与验收对照见 [05-作业演示与验收对照](docs/05-作业演示与验收对照.md)。
 ## 6. 工程骨架（M1）
@@ -205,7 +207,7 @@ powershell -File tools/sync-case.ps1 -Check   # 只比对，不一致退出码 1
 
 ### 6.2 鸿蒙侧（`harmony/`）
 
-DevEco Studio 直接 **File → Open → `harmony/`**：
+DevEco Studio 直接 **File → Open → `E:\campus-case\harmony`**（选 `harmony` 子目录，不要选仓库根）：
 
 | 文件 | 作用 |
 | --- | --- |
@@ -233,7 +235,8 @@ Android Studio 直接 **Open → `android/`**：
 
 ### 6.4 已知状态
 
-两个工程**骨架都还没在本机编译过**（这台机器只有 JDK 17 + Python，无 Gradle / Kotlin 编译器 / DevEco / Android SDK）。首次在 IDE 打开时可能需要：
+鸿蒙侧已在本机真编译、真装包、真跑过（`tools/build-harmony.ps1` + 模拟器 E2E 24/24，见 `docs/TestReport.md`）；
+Android 侧已按需求冻结，只在 `tools/run-kotlin-tests.ps1` 里跑过 `:domain` 的 16 条用例。首次在别的机器上打开时可能需要：
 
 - Gradle：IDE 会按 `gradle-wrapper.properties` 下载 8.11.1，然后补 `./gradlew` 脚本与 `gradle-wrapper.jar`（AS 自动生成）；
 - DevEco：按提示配 SDK 路径与自动签名（`build-profile.json5` 的 `signingConfigs` 目前为空）；

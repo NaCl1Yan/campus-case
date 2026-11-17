@@ -6,7 +6,7 @@
 | 设备 | DevEco 模拟器 `127.0.0.1:5555`，model=emulator，API 17 |
 | 工具链 | DevEco Studio 5.0.5 / hvigor 5.17.5 / SDK 5.0.5(17) / node v18.20.1 / JDK 17 / Python 3.12 |
 | 安装方式 | 未签名 HAP 直接 `hdc install -r`（模拟器不校验签名） |
-| 构建 | `tools/build-harmony.ps1`（镜像到 ASCII 路径后构建，hvigor 拒绝中文路径） |
+| 构建 | `tools/build-harmony.ps1`（仓库已迁到 `E:\campus-case`，**原地构建**；HAP 在 `harmony/entry/build/default/outputs/default/`） |
 
 ---
 
@@ -20,6 +20,7 @@
 | 4 | `powershell -File tools/run-kotlin-tests.ps1` | Kotlin 侧领域引擎（同一套 42 条 fixtures + 15 条语义用例） | ✅ 16/16 通过 |
 | 5 | `tools/sync-case.ps1 -Check` | 三处内容副本（main rawfile / ohosTest rawfile / Android assets）与 `shared/case` 哈希一致 | ✅ ACK |
 | 6 | `tools/e2e.ps1 -Scenario all` | 三条演示链路 24 项断言（需模拟器在线） | ✅ 24/24 |
+| 7 | 迁移回归（2026-11-17）：`E:\campus-case` 原地构建 + 重装 + `e2e -Scenario all` | 路径迁移后工程与玩法链路未被破坏 | ✅ 双模块 PASS + 24/24 |
 
 ---
 
