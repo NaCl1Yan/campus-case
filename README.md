@@ -2,12 +2,12 @@
 
 HarmonyOS 单机推理叙事 App《钟楼七点》：场景探索 → 线索收集 → 组合验证 → 最终判断 → 多结局，带线索板、HUD、阶段进度、存档与杀进程恢复。
 
-> **当前状态**：鸿蒙版**完整可玩**（模拟器实测全链路 + 存档 + 恢复）。Android 版**冻结**，保留代码与规格但不再推进。
+> **当前状态**：鸿蒙版**完整可玩**——模拟器实测全链路、存档、杀进程恢复、收集册、设置持久化，Hypium 单元测试 22/22。
 
-- 平台 A：HarmonyOS NEXT — ArkTS + ArkUI（API 12+），单 HAP，纯离线
-- 平台 B：Android 8.0+ — Kotlin + Jetpack Compose，单 Activity，纯离线
-- 双端共用**同一份功能规格**与**同一份内容 JSON**，只有平台代码是两份；判定逻辑由 `shared/fixtures` 用例双向校验（见 03 文档 §9）
-- 技术栈重点：声明式状态管理、组件动画、领域建模、KV + 关系型双存储、单元测试（Hypium / JUnit5）
+- 平台：HarmonyOS NEXT — ArkTS + ArkUI（API 12+），单 HAP，纯离线，**无任何权限声明**
+- 内容只有一份源：`shared/case/campus_001.json`，构建期复制进 rawfile；判定用例 `shared/fixtures` 同时喂养 ArkTS 单测
+- 技术栈重点：声明式状态管理、组件动画、领域建模、KV + 关系型双存储、单元测试（Hypium）
+- Android 版（Kotlin + Compose）早期做过、现已冻结并归档在 tag `archive/android-v1`，`main` 只保留鸿蒙版
 
 ---
 
@@ -17,29 +17,30 @@ HarmonyOS 单机推理叙事 App《钟楼七点》：场景探索 → 线索收�
 
 | 文档 | 内容 | 状态 |
 | --- | --- | --- |
-| [01-基础功能需求规格说明](docs/01-基础功能需求规格说明.md) | 软件基础功能 FR-01～FR-17、通用规则、验收标准、测试要求（**平台无关**） | v1.2 定稿 |
-| [02-内容与剧情设计规范](docs/02-内容与剧情设计规范.md) | 内容 schema、规模约束、校验规则 | v0.1 骨架，正文待定 |
-| [03-Android版实现规格说明](docs/03-Android版实现规格说明.md) | FR → Android 落地映射、状态/存储/动画/恢复对照、双端一致性策略 | v1.0 |
-| [04-首轮编译绿检查单](docs/04-首轮编译绿检查单.md) | 编译与单测的步骤、期望输出、报错对照表 | v1.1 |
-| [05-作业演示与验收对照](docs/05-作业演示与验收对照.md) | 十分钟演示脚本、需求→实现→证据对照、分支真实性演示、已知限制 | v1.0 |
-| [TestReport](docs/TestReport.md) | 自动化检查结果 + 真机功能验证 + 未执行项与原因 | v1.0 |
-| [PROGRESS](docs/PROGRESS.md) | 收工快照：今天做完什么、明天先做哪三件、踩过的坑 | 每日更新 |
+| [docs/README](docs/README.md) | **文档索引**：每份文档管什么、什么时候看 | — |
+| [01-基础功能需求规格说明](docs/01-基础功能需求规格说明.md) | 软件基础功能 FR-01～FR-17、通用规则、验收标准、测试要求 | v1.6 定稿 |
+| [02-内容与剧情设计规范](docs/02-内容与剧情设计规范.md) | 内容 schema、规模约束、校验规则 | v0.1 骨架 |
+| [03-编译与单测检查单](docs/03-编译与单测检查单.md) | 从零到「构建绿 + Hypium 22/22」的步骤、期望输出、报错对照 | v2.0 |
+| [04-演示与验收对照](docs/04-演示与验收对照.md) | 十分钟演示脚本、需求→实现→证据对照、分支演示、已知限制、交付物清单 | v1.1 |
+| [TestReport](docs/TestReport.md) | 自动化检查结果 + 真机功能验证 + 缺陷根因 + 未执行项 | v1.1 |
+| [PROGRESS](docs/PROGRESS.md) | 收工快照：做完什么、下一步、踩过的坑 | 每日更新 |
 | [drafts/剧情草案-v0](docs/drafts/剧情草案-v0.md) | 早期含具体剧情的混写版，仅作素材保留 | 草案，不采用 |
 
-**阅读顺序**：先看 01 的「§3 通用规则」和「§4 功能需求」，那是所有实现的判定依据；再看 03 的对照表了解各平台怎么落地；02 只定内容长什么样，具体剧情后续单独写。
+**阅读顺序**：先看 `01` 的「§3 通用规则」和「§4 功能需求」，那是所有实现的判定依据；再看 `03` 怎么跑起来、`04` 怎么演示给老师看；`02` 只定内容长什么样。
 
-### 1.2 仓库结构（双端 monorepo）
+### 1.2 仓库结构
 
 ```
 campus-case/
-├─ docs/                 # 规格与设计（两端共用，判定标准只在这里）
-├─ shared/               # 两端共用：case/（内容 JSON）+ fixtures/（一致性用例）
-│                        #   构建期复制进两端资源目录，副本不入库
-├─ harmony/              # DevEco 工程（ArkTS）
-└─ android/              # Gradle 工程（Kotlin + Compose）
+├─ docs/                 # 规格、检查单、演示对照、测试报告、截图与日志（索引见 docs/README.md）
+├─ shared/               # 唯一内容源：case/（案件 JSON）+ fixtures/（42 条判定用例）
+│                        #   构建期复制进 harmony 的 rawfile，副本不入库
+├─ harmony/              # DevEco 工程（ArkTS + ArkUI，交付对象）
+└─ tools/                # 同步 / 预检 / 校验 / 编译 / 演示流水线 / 图标生成
 ```
 
-`shared/` 不允许出现任何平台代码；`harmony/`、`android/` 不允许各自复制一份剧情。
+`shared/` 不允许出现任何平台代码；`harmony/` 不允许自己复制一份剧情。
+Android 版工程已从 `main` 移除，归档在 tag `archive/android-v1`。
 
 ---
 
@@ -140,25 +141,26 @@ campus-case/
 
 ## 3. 忽略规则速览
 
-`.gitignore` 已覆盖：DevEco 构建产物（`build/`、`.hvigor/`、`.preview/`）、Gradle 产物（`android/**/build/`、`.gradle/`）、依赖（`oh_modules/`、`node_modules/`）、签名与本地配置（`local.properties`、`*.p12`、`*.cer`、`*.p7b`、`*.keystore`、`keystore.properties`）、两端**构建期复制的内容副本**（`harmony/**/rawfile/case/`、`android/**/assets/case/`）、系统与编辑器垃圾文件、临时草稿（`scratch/`）。
+`.gitignore` 已覆盖：DevEco 构建产物（`build/`、`.hvigor/`、`.preview/`、`*.hap`）、依赖（`oh_modules/`、`node_modules/`）、签名与本地配置（`local.properties`、`*.p12`、`*.cer`、`*.p7b`、`*.keystore`、`signature/`）、构建期复制的内容副本（`harmony/**/rawfile/case/`）、系统与编辑器垃圾文件、临时草稿（`scratch/`、`tmp/`）、Python 缓存（`__pycache__/`）。
 
 ---
 
 ## 4. 当前进度
 
-| 阶段 | 鸿蒙版（交付对象） | Android 版（冻结） |
-| --- | --- | --- |
-| 需求文档（FR-01～17） | ✅ v1.5 | ✅ 沿用同一套 |
-| 内容（4 场景 / 12 节点 / 6 线索 / 2 结局） | ✅ 《钟楼七点》真实文案 | ✅ 同一份，不复制 |
-| `domain/` 判定引擎 | ✅ 真编译 + 42 条 fixtures | ✅ kotlinc 实编译 16/16 |
-| 引擎与测试模块编译 | ✅ `tools/build-harmony.ps1` → PASS | ⬜ 无 Android SDK |
-| UI（10 个视图 + HUD） | ✅ 单页路由 + 全部页面；线索板含 Canvas 证据链图 | ⬜ 冻结 |
-| Preferences + RDB（五表） | ✅ 快照 + 事实层 + 自动/手动存档 | ⬜ 冻结 |
-| 冷启动恢复（杀进程） | ✅ 实测停在「已完结 100%」 | ⬜ 冻结 |
-| 动画（6 类） | ✅ 转场/进度环/获得/抖动/阶段/打字机 | ⬜ 冻结 |
-| 结局收集册 | ✅ RDB `t_ending_seen` + 页面，含解锁时间 | ⬜ 冻结 |
-| 设置 / 返回键 | ✅ 动画减弱、**字号三档**、清空进度、关于；子页拦截返回键 | ⬜ 冻结 |
-| Hypium 用例「执行」 | ✅ IDE Run 与 `aa test` 均 **22/22**（截图 `docs/screenshots/hypium-run-22.png`，日志 `docs/evidence/hypium-aa-test.log`） | — |
+| 阶段 | 状态 |
+| --- | --- |
+| 需求文档（FR-01～17） | ✅ v1.6 |
+| 内容（4 场景 / 12 节点 / 6 线索 / 2 结局） | ✅ 《钟楼七点》真实文案 |
+| `domain/` 判定引擎 | ✅ 真编译 + 42 条 fixtures |
+| 引擎与测试模块编译 | ✅ `tools/build-harmony.ps1` → RESULT: PASS |
+| UI（13 个视图 + HUD） | ✅ 单页路由 + 全部页面；线索板含 Canvas 证据链图 |
+| Preferences + RDB（五表） | ✅ 快照 + 事实层 + 自动/手动存档 |
+| 冷启动恢复（杀进程） | ✅ 实测停在「已完结 100%」 |
+| 动画（6 类） | ✅ 转场/进度环/获得/抖动/阶段/打字机 |
+| 结局收集册 | ✅ RDB `t_ending_seen` + 页面，含解锁时间 |
+| 设置 / 返回键 | ✅ 动画减弱、**字号三档**、清空进度、关于；子页拦截返回键 |
+| Hypium 用例「执行」 | ✅ IDE Run 与 `aa test` 均 **22/22**（截图 `docs/screenshots/hypium-run-22.png`，日志 `docs/evidence/hypium-aa-test.log`） |
+| 演示流水线 E2E | ✅ 三条链路 24/24（`tools/e2e.ps1 -Scenario all`） |
 
 **现在的样子**：
 
@@ -172,7 +174,7 @@ campus-case/
 
 ```powershell
 # 1) 离线预检（配置/资源/符号/导入/生成物一致性，只需 Python）
-python tools/preflight.py                 # 期望：PASS 10 / FAIL 0
+python tools/preflight.py                 # 期望：PASS 8 / FAIL 0
 
 # 2) 内容校验 + 规格自检（42 条判定用例）
 python tools/validate.py                  # 期望：内容通过 + 42/42
@@ -180,26 +182,28 @@ python tools/validate.py                  # 期望：内容通过 + 42/42
 # 3) 鸿蒙工程编译（主模块 + 测试模块）
 powershell -File tools/build-harmony.ps1  # 期望：RESULT: PASS
 
-# 4) Kotlin 侧领域单测（双端一致性的另一半证据）
-powershell -File tools/run-kotlin-tests.ps1  # 期望：16/16
+# 4) 单元测试 22 个 it（IDE 里右键 Run，或见 docs/03 §2 的命令行跑法）
 
 # 5) 装到模拟器并驱动点击（开发期自动化，可选）
 powershell -File tools/sync-case.ps1
 powershell -File tools/ui-tap.ps1 -Text "接下这桩案子"
 powershell -File tools/ui-tap.ps1 -Dump
+
+# 6) 三条演示链路一次跑完并自动断言（模拟器在线）
+powershell -File tools/e2e.ps1 -Scenario all   # 期望：24/24
 ```
 
 > **路径要求**：hvigor 拒绝含中文的工程路径（`Invalid project path`），仓库已迁到纯 ASCII 的 `E:\campus-case`，
 > 所以 `build-harmony.ps1` 现在**原地构建**（产物 `harmony/entry/build`）；万一仓库又落在中文路径下，
 > 脚本会自动镜像到 `%LOCALAPPDATA%\campus-case-build` 再构建。
 
-演示与验收对照见 [05-作业演示与验收对照](docs/05-作业演示与验收对照.md)。
-## 6. 工程骨架（M1）
+演示与验收对照见 [04-演示与验收对照](docs/04-演示与验收对照.md)。
+## 6. 工程骨架
 
-### 6.1 内容同步（两端共用一份）
+### 6.1 内容同步（唯一内容源）
 
 ```powershell
-powershell -File tools/sync-case.ps1          # shared/case → rawfile/case + assets/case
+powershell -File tools/sync-case.ps1          # shared/case → harmony 的 rawfile/case
 powershell -File tools/sync-case.ps1 -Check   # 只比对，不一致退出码 1（AC-19 用）
 ```
 
@@ -220,26 +224,12 @@ DevEco Studio 直接 **File → Open → `E:\campus-case\harmony`**（选 `harmo
 
 构建与测试：`hvigorw assembleHap`、`hvigorw test`（或 DevEco 里右键 `ohosTest` → Run）。
 
-### 6.3 Android 侧（`android/`）
+### 6.3 已知状态与首次打开
 
-Android Studio 直接 **Open → `android/`**：
+鸿蒙侧已在本机真编译、真装包、真跑过（`tools/build-harmony.ps1` + 模拟器 E2E 24/24 + Hypium 22/22，见 `docs/TestReport.md`）。首次在别的机器上打开时可能需要：
 
-| 模块 | 作用 |
-| --- | --- |
-| `:domain` | 纯 JVM：引擎 + 内容校验 + 42 条 fixture runner（无 Android 依赖，`./gradlew :domain:test` 秒级） |
-| `:app` | Compose 壳：`MainActivity` + `LaunchScreen`（同样读 assets 内容 → 跑 `Engine` → 显示状态） |
+- DevEco：按提示配 SDK 路径；`build-profile.json5` 的 `signingConfigs` 为空，模拟器/本地调试不需要签名，真机自调需要 `Project Structure → Signing Configs` 勾自动签名（需登录华为账号）
+- 依赖：首次 Sync 会 `ohpm install`，装出 `harmony/oh_modules`（不入库）
+- 内容副本：clone 下来 rawfile 里是空的，先跑一次 `tools/sync-case.ps1`，否则应用白屏
 
-`app/build.gradle.kts` 里有 `syncCaseContent` 复制任务，挂在 `pre*Build` 上，所以构建时自动同步内容；命令行也可先用 6.1 的脚本。
-
-测试：`./gradlew :domain:test`；打包：`./gradlew :app:assembleDebug`。
-
-### 6.4 已知状态
-
-鸿蒙侧已在本机真编译、真装包、真跑过（`tools/build-harmony.ps1` + 模拟器 E2E 24/24，见 `docs/TestReport.md`）；
-Android 侧已按需求冻结，只在 `tools/run-kotlin-tests.ps1` 里跑过 `:domain` 的 16 条用例。首次在别的机器上打开时可能需要：
-
-- Gradle：IDE 会按 `gradle-wrapper.properties` 下载 8.11.1，然后补 `./gradlew` 脚本与 `gradle-wrapper.jar`（AS 自动生成）；
-- DevEco：按提示配 SDK 路径与自动签名（`build-profile.json5` 的 `signingConfigs` 目前为空）；
-- ArkTS 侧 JSON 解析与 `TextDecoder` 的 API 名称若有出入，编译一次即可定位，不影响引擎逻辑。
-
-下一步：M3 做 UI 与 6 类动画（先鸿蒙后 Android，共用 `domain/`），M4 接持久化与杀进程恢复。
+下一步（可选加分项）：录一段 3 分钟演示、补美术/音效、把设置项接上真实开关。

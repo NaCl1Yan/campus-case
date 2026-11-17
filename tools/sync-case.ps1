@@ -1,4 +1,4 @@
-﻿# 把 shared/case 同步到两端资源目录（唯一源在 shared/case，副本不入库）
+﻿# 把 shared/case 同步到鸿蒙侧资源目录（唯一源在 shared/case，副本不入库）
 # 用法（仓库根）：powershell -File tools/sync-case.ps1
 #                powershell -File tools/sync-case.ps1 -Check   # 只比对不写入
 
@@ -11,8 +11,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $src = Join-Path $root 'shared\case'
 $targets = @(
     (Join-Path $root 'harmony\entry\src\main\resources\rawfile\case'),
-    (Join-Path $root 'harmony\entry\src\ohosTest\resources\rawfile\case'),
-    (Join-Path $root 'android\app\src\main\assets\case')
+    (Join-Path $root 'harmony\entry\src\ohosTest\resources\rawfile\case')
 )
 
 if (-not (Test-Path $src)) {
@@ -59,7 +58,7 @@ foreach ($target in $targets) {
 
 if ($Check) {
     if ($drift -eq 0) {
-        Write-Host 'ACK：两端内容与 shared/case 一致' -ForegroundColor Green
+        Write-Host 'ACK：鸿蒙侧内容与 shared/case 一致' -ForegroundColor Green
         exit 0
     }
     Write-Host "发现 $drift 处不一致（AC-19 会失败）" -ForegroundColor Red

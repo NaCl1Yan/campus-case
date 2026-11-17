@@ -14,15 +14,14 @@
 
 | # | 命令 | 覆盖内容 | 结果 |
 | --- | --- | --- | --- |
-| 1 | `python tools/preflight.py` | 配置语法、鸿蒙必填字段与 srcEntry、资源引用、页面清单、跨端符号、ArkTS 导入、Gradle 目录、生成物一致性、Python 工具 | ✅ PASS 10 / WARN 0 / FAIL 0 |
+| 1 | `python tools/preflight.py` | 配置语法、鸿蒙必填字段与 srcEntry、资源引用、页面清单、ArkTS 符号、ArkTS 导入、fixtures 生成物、Python 工具 | ✅ PASS 8 / WARN 0 / FAIL 0 |
 | 2 | `python tools/validate.py` | 内容引用完整性、规模下限、可达性 BFS（两个结局均可达成）、分支互斥、42 条判定用例 | ✅ 44 项通过（内容 + 42 用例） |
 | 3 | `powershell -File tools/build-harmony.ps1` | 主模块 `CompileArkTS` + 测试模块 `OhosTestCompileArkTS` | ✅ 双模块 BUILD SUCCESSFUL，`RESULT: PASS` |
-| 4 | `powershell -File tools/run-kotlin-tests.ps1` | Kotlin 侧领域引擎（同一套 42 条 fixtures + 15 条语义用例） | ✅ 16/16 通过 |
-| 5 | `tools/sync-case.ps1 -Check` | 三处内容副本（main rawfile / ohosTest rawfile / Android assets）与 `shared/case` 哈希一致 | ✅ ACK |
-| 6 | `tools/e2e.ps1 -Scenario all` | 三条演示链路 24 项断言（需模拟器在线） | ✅ 24/24 |
-| 7 | 迁移回归（2026-11-17）：`E:\campus-case` 原地构建 + 重装 + `e2e -Scenario all` | 路径迁移后工程与玩法链路未被破坏 | ✅ 双模块 PASS + 24/24 |
-| 8 | `aa test -m entry_test -s unittest OpenHarmonyTestRunner`（2026-11-17） | Hypium 22 个 `it`（Engine 14 + Fixtures 8，覆盖 42 条 fixture） | ✅ Tests run: 22, Failure: 0, Error: 0, Pass: 22（`docs/evidence/hypium-aa-test.log`） |
-| 9 | DevEco **Run 'All Tests in 'test''**（2026-11-17 20:17） | 同一套 Hypium 用例，走 IDE 链路（含 TestAbility 宿主） | ✅ 测试已通过：22 / 22，耗时 154 ms（截图 `docs/screenshots/hypium-run-22.png`） |
+| 4 | `tools/sync-case.ps1 -Check` | 两处内容副本（main rawfile / ohosTest rawfile）与 `shared/case` 哈希一致 | ✅ ACK |
+| 5 | `tools/e2e.ps1 -Scenario all` | 三条演示链路 24 项断言（需模拟器在线） | ✅ 24/24 |
+| 6 | 迁移回归（2026-11-17）：`E:\campus-case` 原地构建 + 重装 + `e2e -Scenario all` | 路径迁移后工程与玩法链路未被破坏 | ✅ 双模块 PASS + 24/24 |
+| 7 | `aa test -m entry_test -s unittest OpenHarmonyTestRunner`（2026-11-17） | Hypium 22 个 `it`（Engine 14 + Fixtures 8，覆盖 42 条 fixture） | ✅ Tests run: 22, Failure: 0, Error: 0, Pass: 22（`docs/evidence/hypium-aa-test.log`） |
+| 8 | DevEco **Run 'All Tests in 'test''**（2026-11-17 20:17） | 同一套 Hypium 用例，走 IDE 链路（含 TestAbility 宿主） | ✅ 测试已通过：22 / 22，耗时 154 ms（截图 `docs/screenshots/hypium-run-22.png`） |
 
 ---
 
@@ -87,7 +86,6 @@
 
 | 项 | 原因 | 补救 |
 | --- | --- | --- |
-| Android 版 | 已按需求冻结 | 代码与规格保留在仓库，不再推进 |
 | 美术资源 / 音效 | 作业范围内未接入 | 场景为纯色 + 文字；设置项已预留开关 |
 
 ---

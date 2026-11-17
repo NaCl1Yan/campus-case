@@ -7,9 +7,9 @@
   2. HarmonyOS    module.json5 / app.json5 必填字段；srcEntry 文件存在
   3. 资源引用     $string: / $color: / $media: / $profile: 在对应模块内可解析
   4. 页面清单     main_pages.json 列出的页面文件存在
-  5. 跨端符号     Kotlin / ArkTS 里调用的 Engine.* / CaseLoader.* 是否真的声明过
-  6. 类型导入     ArkTS 从 ./Types 导入的名字是否真的导出
-  7. Gradle 目录  libs.<alias> / libs.plugins.<alias> 是否在 libs.versions.toml 里
+  5. ArkTS 符号   ArkTS 里调用的 Engine.* / CaseLoader.* 是否真的声明过
+  6. ArkTS 导入   相对导入的文件存在，且导入的名字确实是对方的导出
+  7. Fixtures     鸿蒙侧生成物与 shared/fixtures 是否一致
   8. Python 工具  可编译（py_compile）
 
 用法：python tools/preflight.py [-v]
@@ -224,7 +224,7 @@ def check_harmony(configs: dict[str, Any]) -> None:
         fail("4 页面清单", "缺少 main_pages.json")
 
 
-# ---------------------------------------------------------------- 5/6 跨端符号
+# ---------------------------------------------------------------- 5 ArkTS 符号 / 6 ArkTS 导入
 
 
 def declared_members(path: Path, keywords: tuple[str, ...]) -> set[str]:
@@ -239,28 +239,6 @@ def declared_members(path: Path, keywords: tuple[str, ...]) -> set[str]:
 def called_members(path: Path, holder: str) -> set[str]:
     text = path.read_text(encoding="utf-8")
     return set(re.findall(rf"\b{holder}\.([A-Za-z_][A-Za-z0-9_]*)\s*\(", text))
-
-
-def check_kotlin_symbols() -> None:
-    engine_path = ROOT / "android/domain/src/main/kotlin/com/nacl1yan/campuscase/domain/Engine.kt"
-    loader_path = ROOT / "android/domain/src/main/kotlin/com/nacl1yan/campuscase/domain/CaseLoader.kt"
-    if not engine_path.exists() or not loader_path.exists():
-        fail("5 跨端符号", "Kotlin 引擎文件缺失")
-        return
-
-    engine_fns = declared_members(engine_path, ("fun",))
-    loader_fns = declared_members(loader_path, ("fun",))
-
-    # 属性（如 canPublic）用的是 val/fun；这里把 fun 已覆盖
-    bad = 0
-    for src in ROOT.glob("android/**/*.kt"):
-        for holder, declared in (("Engine", engine_fns), ("CaseLoader", loader_fns)):
-            for name in called_members(src, holder):
-                if name not in declared:
-                    fail("5 跨端符号", f"{src.relative_to(ROOT).as_posix()}: {holder}.{name} 未在 {holder} 中声明")
-                    bad += 1
-    if bad == 0:
-        ok("5 跨端符号", f"Kotlin 调用点全部命中（Engine {len(engine_fns)} 个函数，CaseLoader {len(loader_fns)} 个）")
 
 
 EXPORT_RE = re.compile(
@@ -304,10 +282,10 @@ def check_generated_fixtures() -> None:
     generator = ROOT / "tools/gen_fixtures_ets.py"
     output = ROOT / "harmony/entry/src/ohosTest/ets/test/Fixtures.generated.ets"
     if not generator.exists():
-        fail("9 Fixtures 生成物", "缺少 tools/gen_fixtures_ets.py")
+        fail("7 Fixtures 生成物", "缺少 tools/gen_fixtures_ets.py")
         return
     if not output.exists():
-        fail("9 Fixtures 生成物", "缺少 Fixtures.generated.ets，请运行 python tools/gen_fixtures_ets.py")
+        fail("7 Fixtures 生成物", "缺少 Fixtures.generated.ets，请运行 python tools/gen_fixtures_ets.py")
         return
     proc = subprocess.run(
         [sys.executable, str(generator), "--check"],
@@ -315,17 +293,17 @@ def check_generated_fixtures() -> None:
     )
     if proc.returncode != 0:
         detail = (proc.stdout or proc.stderr or "").strip().splitlines()
-        fail("9 Fixtures 生成物", detail[-1] if detail else "生成物漂移")
+        fail("7 Fixtures 生成物", detail[-1] if detail else "生成物漂移")
         return
     size_kb = round(output.stat().st_size / 1024, 1)
-    ok("9 Fixtures 生成物", f"与 shared/fixtures 一致（{size_kb} KB）")
+    ok("7 Fixtures 生成物", f"与 shared/fixtures 一致（{size_kb} KB）")
 
 
 def check_arkts_symbols() -> None:
     engine_path = ROOT / "harmony/entry/src/main/ets/domain/Engine.ets"
     loader_path = ROOT / "harmony/entry/src/main/ets/domain/CaseLoader.ets"
     if not all(p.exists() for p in (engine_path, loader_path)):
-        fail("5 跨端符号", "ArkTS 引擎文件缺失")
+        fail("5 ArkTS 符号", "ArkTS 引擎文件缺失")
         return
 
     engine_fns = declared_members(engine_path, ("static",))
@@ -335,52 +313,10 @@ def check_arkts_symbols() -> None:
         for holder, declared in (("Engine", engine_fns), ("CaseLoader", loader_fns)):
             for name in called_members(src, holder):
                 if name not in declared:
-                    fail("5 跨端符号", f"{src.relative_to(ROOT).as_posix()}: {holder}.{name} 未在 {holder} 中声明")
+                    fail("5 ArkTS 符号", f"{src.relative_to(ROOT).as_posix()}: {holder}.{name} 未在 {holder} 中声明")
                     bad += 1
     if bad == 0:
-        ok("5 跨端符号", f"ArkTS 调用点全部命中（Engine {len(engine_fns)} 个，CaseLoader {len(loader_fns)} 个）")
-
-
-# ---------------------------------------------------------------- 7 Gradle 目录
-
-
-def check_gradle_catalog() -> None:
-    catalog = ROOT / "android/gradle/libs.versions.toml"
-    if not catalog.exists():
-        fail("7 Gradle 目录", "缺少 libs.versions.toml")
-        return
-    text = catalog.read_text(encoding="utf-8")
-    section = ""
-    raw_aliases: dict[str, set[str]] = {"libraries": set(), "plugins": set()}
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("[") and line.endswith("]"):
-            section = line[1:-1]
-            continue
-        if section in raw_aliases:
-            match = re.match(r"([A-Za-z0-9_.-]+)\s*=", line)
-            if match:
-                raw_aliases[section].add(match.group(1))
-
-    # 版本目录访问器规则：`-` 与 `_` 都映射成 `.`
-    def accessor(alias: str) -> str:
-        return alias.replace("-", ".").replace("_", ".")
-
-    aliases = {kind: {accessor(a) for a in names} for kind, names in raw_aliases.items()}
-
-    bad = 0
-    for build_file in ROOT.glob("android/**/build.gradle.kts"):
-        source = build_file.read_text(encoding="utf-8")
-        for ref in re.findall(r"libs\.plugins\.([a-zA-Z0-9_.]+)", source):
-            if ref not in aliases["plugins"]:
-                fail("7 Gradle 目录", f"{build_file.relative_to(ROOT).as_posix()}: libs.plugins.{ref} 未定义")
-                bad += 1
-        for ref in re.findall(r"libs\.((?!plugins\.)[a-zA-Z0-9_.]+)", source):
-            if ref not in aliases["libraries"]:
-                fail("7 Gradle 目录", f"{build_file.relative_to(ROOT).as_posix()}: libs.{ref} 未定义")
-                bad += 1
-    if bad == 0:
-        ok("7 Gradle 目录", "构建脚本引用的插件与依赖别名均已定义")
+        ok("5 ArkTS 符号", f"ArkTS 调用点全部命中（Engine {len(engine_fns)} 个，CaseLoader {len(loader_fns)} 个）")
 
 
 # ---------------------------------------------------------------- 8 Python 工具
@@ -404,16 +340,14 @@ def check_python_tools() -> None:
 
 
 def main() -> int:
-    if not (ROOT / "harmony").exists() or not (ROOT / "android").exists():
-        print("请在仓库根目录运行（需要同时存在 harmony/ 与 android/）")
+    if not (ROOT / "harmony").exists():
+        print("请在仓库根目录运行（需要存在 harmony/）")
         return 1
 
     configs = check_configs()
     check_harmony(configs)
-    check_kotlin_symbols()
     check_arkts_symbols()
     check_arkts_imports()
-    check_gradle_catalog()
     check_python_tools()
     check_generated_fixtures()
 

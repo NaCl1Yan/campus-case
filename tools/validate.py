@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-campus-case 内容校验 + 规格自检工具（开发期工具，不打包、不替代两端实现）
+campus-case 内容校验 + 规格自检工具（开发期工具，不打包、不替代真实实现）
 
 用途：
   1. 按 01 文档 FR-16 的校验清单检查 shared/case/*.json（引用完整性、规模下限、可达性）
   2. 用一份"规格参照实现"跑 shared/fixtures/*.json，确认用例与 01 文档 §5.3 的语义一致
-     —— 两端引擎（ArkTS / Kotlin）必须对同一批用例给出同样结果（AC-18）
+     —— 引擎（ArkTS）的判定结果必须与 shared/fixtures 中登记的期望一致（AC-18）
 
 用法：
   python tools/validate.py                 # 校验内容 + 跑全部 fixtures

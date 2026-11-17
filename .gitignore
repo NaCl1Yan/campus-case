@@ -2,9 +2,9 @@
 build/
 .hvigor/
 .hvigor-cache/
-.gradle/
 .preview/
 .release/
+.test/
 *.hap
 *.hsp
 *.har
@@ -39,6 +39,7 @@ key.properties
 Thumbs.db
 desktop.ini
 *.log
+!docs/evidence/*.log
 
 # ---- 临时草稿（允许存在但不入库）----
 scratch/
@@ -50,17 +51,8 @@ tmp/
 __pycache__/
 *.pyc
 
-# ---- 本地工具链缓存（run-kotlin-tests.ps1 下载的 jar）----
+# ---- 本地工具链缓存 ----
 .tools/
 
-# ---- Android / Gradle 产物 ----
-*.apk
-*.aab
-*.ap_
-captures/
-keystore.properties
-gradle-app.setting
-
-# ---- 双端构建期复制的内容副本（唯一源在 shared/case）----
+# ---- 构建期复制的内容副本（唯一源在 shared/case）----
 harmony/**/rawfile/case/
-android/**/src/main/assets/case/

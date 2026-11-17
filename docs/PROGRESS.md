@@ -1,7 +1,7 @@
 # 进度与明日待办
 ## 《钟楼七点》鸿蒙版 · 2026-11-16 收工快照
 
-> 最近更新：2026-11-17 19:45（Asia/Shanghai）
+> 最近更新：2026-11-17 20:45（Asia/Shanghai）
 > 分支：`main`；里程碑 tag：`v0.9.0-playable`（后续改动已在其后追加）
 > 仓库位置：**`E:\campus-case`**（2026-11-17 从 `E:\校园推理galgame` 迁出，见 §3.6）
 
@@ -18,7 +18,7 @@
 | HUD 与动画 | ✅ 阶段、目标、线索、双链、进度环、6 类动画 | `view/HudBar.ets` 等 |
 | 冷启动恢复 | ✅ 自动槽 → 快照 → 流水回放；杀进程实测停在「已完结 100%」 | `store/GameController.ets::restore` |
 | 演示流水线 | ✅ 三条链路 24 项断言全部通过 | `tools/e2e.ps1`；截图 `docs/screenshots/e2e-*.jpeg` |
-| 文档 | ✅ 需求 / 内容 / Android（冻结）/ 编译检查单 / 演示对照 / 测试报告 | `docs/` |
+| 文档 | ✅ 需求 / 内容 / 编译与单测检查单 / 演示验收对照 / 测试报告（索引 `docs/README.md`） | `docs/` |
 
 **最近的关键提交**
 
@@ -114,6 +114,19 @@ DevEco 打开 `E:\校园推理galgame` 会直接弹 `Cannot Open Project: ... co
 （`Tests run: 22, Failure: 0, Error: 0, Pass: 22`，日志 `docs/evidence/hypium-aa-test.log`，
 IDE 截图 `docs/screenshots/hypium-run-22.png`，154 ms）。
 
+### 3.8 仓库规范化：Android 移除 + 文档重排（2026-11-17 20:45）
+
+需求方确认只交鸿蒙版，于是把「冻结但还占地方」的东西清出 `main`：
+
+| 处理 | 内容 |
+| --- | --- |
+| 归档后再移除 | `android/`（20 个文件）+ `docs/03-Android版实现规格说明.md` + `tools/run-kotlin-tests.ps1`，归档 tag `archive/android-v1`、分支 `archive/android`（都已推送） |
+| 文档重排 | 04→`03-编译与单测检查单`、05→`04-演示与验收对照`，编号连续；新增 `docs/README.md` 作索引、`docs/evidence/` 存原始日志 |
+| 工具收敛 | `preflight.py` 从 10 项降到 8 项（去掉 Kotlin 符号、Gradle 目录检查）；`sync-case.ps1` 只同步鸿蒙两处 rawfile，输出改为「鸿蒙侧内容一致」 |
+| 口径修正 | `01` 目标平台改为 HarmonyOS 单端（v1.6），AC-18 降级为历史说明；`02`/README/TestReport/PROGRESS 里「双端」措辞一并改掉 |
+
+回归：`preflight` PASS 8、`validate` 42/42、`sync-case -Check` ACK、`build-harmony.ps1` PASS、Hypium 22/22 不受影响。
+
 ## 4. 今天踩过的坑（明天不用重复踩）
 | 坑 | 结论 |
 | --- | --- |
@@ -129,11 +142,14 @@ IDE 截图 `docs/screenshots/hypium-run-22.png`，154 ms）。
 ## 5. 仓库速查
 
 ```
-docs/            01 需求 / 02 内容 / 03 Android(冻结) / 04 编译检查单 / 05 演示对照 / TestReport
-shared/case/     唯一内容源（两端共用）
-shared/fixtures/ 42 条判定用例（Kotlin + ArkTS 各自跑）
+docs/            00 索引 / 01 需求 / 02 内容 / 03 编译与单测 / 04 演示验收 / TestReport
+                 screenshots/ 运行截图   evidence/ 原始日志   drafts/ 早期草案
+shared/case/     唯一内容源
+shared/fixtures/ 42 条判定用例（Hypium 遍历执行）
 harmony/         DevEco 工程（交付对象）
-android/         Gradle 工程（冻结，仅保留）
 tools/           preflight / validate / gen_fixtures_ets / sync-case / build-harmony /
-                 run-kotlin-tests / ui-tap / e2e / make-icons
+                 ui-tap / e2e / make-icons
 ```
+
+> Android 版（Kotlin + Compose）已于 2026-11-17 冻结并从 `main` 移除，
+> 归档在 tag `archive/android-v1` / 分支 `archive/android`；需要时 `git checkout archive/android-v1 -- android/` 取回。

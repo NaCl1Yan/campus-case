@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Compose 负责视觉，这里只给窗口一个无 ActionBar 的壳 -->
-    <style name="Theme.CampusCase" parent="android:Theme.Material.Light.NoActionBar" />
-</resources>
