@@ -56,10 +56,34 @@ function Get-Nodes {
     return $acc
 }
 
-function Tap($text, [int]$below = 0) {
+function ScrollDown {
+    & $Hdc shell uitest uiInput swipe 630 2100 630 900 300 | Out-Null
+    Start-Sleep -Milliseconds 800
+}
+
+function ScrollUp {
+    & $Hdc shell uitest uiInput swipe 630 900 630 2100 300 | Out-Null
+    Start-Sleep -Milliseconds 800
+}
+
+function Find-Node($text, [int]$below) {
     $nodes = Get-Nodes | Where-Object { $_.text -eq $text -and $_.cy -ge $below }
     if (-not $nodes) { $nodes = Get-Nodes | Where-Object { $_.text -like "*$text*" -and $_.cy -ge $below } }
-    if (-not $nodes) { throw "找不到可点击文本：$text" }
+    return $nodes
+}
+
+function Tap($text, [int]$below = 0) {
+    $nodes = Find-Node $text $below
+    if (-not $nodes) {
+        # 字号放大后可点项可能落在折叠线以下：滚一屏再找
+        ScrollDown
+        $nodes = Find-Node $text $below
+    }
+    if (-not $nodes) {
+        ScrollUp; ScrollUp
+        $nodes = Find-Node $text $below
+    }
+    if (-not $nodes) { throw "找不到可点击文本：$text（已尝试滚动）" }
     $n = $nodes[0]
     & $Hdc shell uitest uiInput click $n.cx $n.cy | Out-Null
     Say ("  点击 {0} @ ({1},{2})" -f $n.text, $n.cx, $n.cy) 'DarkGray'
@@ -102,6 +126,16 @@ function Restart-App {
     Start-Sleep 6
 }
 
+function Ensure-DefaultSettings {
+    # 字号固定 1.0，避免大字号下卡片与固定按钮重叠导致误点
+    Tap '设置'
+    Start-Sleep 1
+    Tap '标准'
+    Start-Sleep 1
+    Tap '‹ 返回'
+    Start-Sleep 1
+}
+
 function Reset-Progress {
     Tap '重来'
     Start-Sleep 1
@@ -114,6 +148,7 @@ function Reset-Progress {
 function Scenario-Happy {
     Say "`n=== 主线（行动线 + 动机线都成立 → E-A《七点钟声》）===" 'Cyan'
     Restart-App
+    Ensure-DefaultSettings
     Reset-Progress
     Expect '第1阶段 · 简报' '回到简报页'
 
@@ -167,6 +202,7 @@ function Scenario-Happy {
 function Scenario-Breach {
     Say "`n=== 撬锁分支（动机线断裂 → 私下对质应灰显）===" 'Cyan'
     Restart-App
+    Ensure-DefaultSettings
     Reset-Progress
     Tap '接下这桩案子'
     Tap '图书馆 · 旧报刊区'; Tap '值班表上的涂改'; Tap '‹ 返回'
@@ -200,6 +236,7 @@ function Scenario-Breach {
 function Scenario-Slots {
     Say "`n=== 存档 / 读档 / 杀进程恢复 ===" 'Cyan'
     Restart-App
+    Ensure-DefaultSettings
     Tap '存档'
     Expect '自动存档' '打开存档页'
     # 只操作「存档槽 1」那一行（纵向 1200–1450），避免点到自动槽

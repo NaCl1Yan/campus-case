@@ -60,6 +60,11 @@ export struct ClueBoardView {
     this.selected = this.selected.concat([id]);
   }
 
+  /** 卡片区高度：3 列 × (86 + 8) 行距，交给外层 Scroll 滚动 */
+  private gridHeight(): number {
+    return Math.ceil(this.cards.length / 3) * (86 + 8);
+  }
+
   /** 失败抖动（动画 5/6）：连错不惩罚，但要给反馈。 */
   private shake(): void {
     this.getUIContext().animateTo({ duration: 80, iterations: 3, curve: Curve.Sharp }, () => {

@@ -23,11 +23,16 @@ export struct ChainGraph {
   @Prop @Watch('onEdgesChange') edges: RuleEdge[] = [];
   @Prop chainBIds: string[] = [];
   @Prop chainAIds: string[] = [];
+  @Prop fs: number = 1;
 
   private settings: RenderingContextSettings = new RenderingContextSettings(true);
   private ctx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings);
   @State widthVp: number = 320;
   @State heightVp: number = 150;
+
+  private graphHeight(): number {
+    return this.fs > 1.2 ? 118 : 150;
+  }
 
   onEdgesChange(): void {
     this.draw();
@@ -101,7 +106,7 @@ export struct ChainGraph {
     Column({ space: 4 }) {
       Canvas(this.ctx)
         .width('100%')
-        .height(150)
+        .height(this.graphHeight())
         .onReady(() => this.draw())
         .onAreaChange((_old: Area, now: Area) => {
           this.widthVp = Number(now.width);
