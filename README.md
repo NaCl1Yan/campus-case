@@ -16,6 +16,7 @@ HarmonyOS 单机推理叙事 App《钟楼七点》：场景探索 → 线索收�
 - **状态反馈**：HUD 常驻阶段 / 目标 / 线索计数 / 双链进度 / 进度环
 - **持久化**：Preferences 快照 + RDB 五表（事实、流水、存档槽、结局、设置），自动槽 + 3 个手动槽
 - **恢复**：杀进程后重开仍停在同一进度（`aa force-stop` 实测）
+- **外观**：深色 / 浅色 / 跟随系统三档，配色走资源主题，切换即时生效
 - **设置**：动画减弱、字号三档（1.0 / 1.2 / 1.5）、清空进度
 - **分支真实生效**：撬锁拿 C1 会永久关闭群消息节点 → 拿不到 C4 → 动机线断裂 → 只能走结局 B
 
@@ -54,11 +55,13 @@ $hdc = 'D:\huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe'
 
 ![演示录屏](docs/demo/demo.gif)
 
-| 简报 | 线索板 | 结局 |
+| 校园地图（浅色） | 线索板（浅色） | 设置（浅色） |
 | --- | --- | --- |
-| ![简报](docs/screenshots/01-brief.jpeg) | ![线索板](docs/screenshots/07-chaingraph.jpeg) | ![结局](docs/screenshots/03-ending.jpeg) |
+| ![地图](docs/screenshots/12-new-hub-light.jpeg) | ![线索板](docs/screenshots/15-new-board-light.jpeg) | ![设置](docs/screenshots/14-new-settings-light.jpeg) |
+| **底部导航 + 更多菜单** | **线索板（深色）** | **结局（深色）** |
+| ![导航](docs/screenshots/17-nav-hub.jpeg) ![更多](docs/screenshots/18-more-menu.jpeg) | ![深色线索板](docs/screenshots/16-new-board-dark.jpeg) | ![结局](docs/screenshots/03-ending.jpeg) |
 
-更多截图见 `docs/screenshots/`（共 18 张，含大字号、分支证据、单测结果）。
+更多截图见 `docs/screenshots/`（含大字号、分支证据、单测结果与旧版界面）。
 
 ## 5. 测试
 

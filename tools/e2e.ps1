@@ -128,6 +128,8 @@ function Restart-App {
 
 function Ensure-DefaultSettings {
     # 字号固定 1.0，避免大字号下卡片与固定按钮重叠导致误点
+    Tap '⋯ 更多'
+    Start-Sleep 1
     Tap '设置'
     Start-Sleep 1
     Tap '标准'
@@ -137,7 +139,9 @@ function Ensure-DefaultSettings {
 }
 
 function Reset-Progress {
-    Tap '重来'
+    Tap '⋯ 更多'
+    Start-Sleep 1
+    Tap '重来本局'
     Start-Sleep 1
     Tap '重开'
     Start-Sleep 2
@@ -194,7 +198,10 @@ function Scenario-Happy {
     Expect '《七点钟声》' '进入结局 A'
     Shot 'e2e-happy-ending.jpeg'
 
+    Tap '⋯ 更多'
+    Start-Sleep 1
     Tap '收集册'
+    Start-Sleep 1
     Expect '已解锁' '收集册点亮'
     Shot 'e2e-happy-gallery.jpeg'
 }
@@ -249,6 +256,8 @@ function Scenario-Slots {
 
     Restart-App
     Expect '线索' '杀进程重启后仍能进游戏'
+    Tap '⋯ 更多'
+    Start-Sleep 1
     Tap '设置'
     Expect '动画减弱' '设置页可进'
     Tap '动画减弱'
