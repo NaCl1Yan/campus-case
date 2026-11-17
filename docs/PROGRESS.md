@@ -101,8 +101,19 @@ DevEco 打开 `E:\校园推理galgame` 会直接弹 `Cannot Open Project: ... co
 - IDE 入口：`File → Open → E:\campus-case\harmony`（选 `harmony` 子目录，不是仓库根）
 - 文档里的旧路径已同步：`docs/04`（路径说明）、`README`（§5 提示 + §6.2 IDE 入口）、`TestReport`
 
-## 4. 今天踩过的坑（明天不用重复踩）
+### 3.7 Hypium 用例真跑通（2026-11-17 20:15）
 
+昨天记的「CLI 下 Hypium 不推进」不是环境限制，是两个代码问题：
+
+1. `describe('Fixtures(AC-18)')` 被框架判非法（只允许字母/数字/下划线/点，首字符须字母）→ 改 `Fixtures.AC18`
+2. Hypium 报告链路 `delegator.print()` 需要**已启动的 UIAbility 作宿主**，没有时 Promise 永不 resolve
+   → 新增 `ets/testability/TestAbility.ets` + `module.json5` 声明；runner 改为 `startAbility(TestAbility)`；
+   runner 里的 `getAbilityDelegator()` 还必须放进 `onRun()`（模块顶层拿到 null）
+
+结果：`aa test` 与 IDE Run 都是 **22/22**
+（`Tests run: 22, Failure: 0, Error: 0, Pass: 22`，日志 `docs/evidence/hypium-aa-test.log`）。
+
+## 4. 今天踩过的坑（明天不用重复踩）
 | 坑 | 结论 |
 | --- | --- |
 | hvigor / DevEco 拒绝中文路径 | 仓库已迁到 `E:\campus-case`；`build-harmony.ps1` **原地构建**，只有非 ASCII 路径才自动镜像到 `%LOCALAPPDATA%\campus-case-build` |

@@ -3,6 +3,14 @@
     {
       "name": "module_test_desc",
       "value": "campus-case 单元测试模块"
+    },
+    {
+      "name": "TestAbility_desc",
+      "value": "campus-case 单元测试宿主"
+    },
+    {
+      "name": "TestAbility_label",
+      "value": "CampusCase Test"
     }
   ]
 }

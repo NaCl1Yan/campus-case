@@ -21,6 +21,7 @@
 | 5 | `tools/sync-case.ps1 -Check` | 三处内容副本（main rawfile / ohosTest rawfile / Android assets）与 `shared/case` 哈希一致 | ✅ ACK |
 | 6 | `tools/e2e.ps1 -Scenario all` | 三条演示链路 24 项断言（需模拟器在线） | ✅ 24/24 |
 | 7 | 迁移回归（2026-11-17）：`E:\campus-case` 原地构建 + 重装 + `e2e -Scenario all` | 路径迁移后工程与玩法链路未被破坏 | ✅ 双模块 PASS + 24/24 |
+| 8 | `aa test -m entry_test -s unittest OpenHarmonyTestRunner`（2026-11-17） | Hypium 22 个 `it`（Engine 14 + Fixtures 8，覆盖 42 条 fixture） | ✅ Tests run: 22, Failure: 0, Error: 0, Pass: 22（`docs/evidence/hypium-aa-test.log`） |
 
 ---
 
@@ -85,7 +86,6 @@
 
 | 项 | 原因 | 补救 |
 | --- | --- | --- |
-| Hypium 22 个 `it` 的执行 | 命令行 `hvigorw test` 走 DevEco GUI 的 localTest 脚手架（`.test/` + `src/test` 布局），`aa test` + 自建 runner 下 Hypium 不推进 spec（已实测：连 `expect(1+1)` 都停在 `class=` 之后） | 在 DevEco 里右键 `entry/src/ohosTest/ets/test` → Run 'Tests in test'，期望 22 个全绿 |
 | Android 版 | 已按需求冻结 | 代码与规格保留在仓库，不再推进 |
 | 美术资源 / 音效 | 作业范围内未接入 | 场景为纯色 + 文字；设置项已预留开关 |
 
@@ -95,6 +95,9 @@
 
 | 缺陷 | 现象 | 根因 | 修复 |
 | --- | --- | --- | --- |
+| describe 名非法 | Run 立刻失败：`'Fixtures(AC-18)' is an invalid describe value`，通过数 0 | Hypium 的 describe 值只允许字母/数字/下划线/点，且首字符必须是字母 | 改名 `Fixtures.AC18` |
+| 用例执行卡死 | Run 窗口永远停在「正在运行测试…」，设备端停在 `OHOS_REPORT_STATUS: class=…`；`aa test` 只报 Timeout | Hypium 报告链路 `OhReport → SysTestKit.print → delegator.print()` 需要一个已启动的 UIAbility 作宿主，没有时该 Promise 永不 resolve | 新增 `ets/testability/TestAbility.ets`（`onCreate` 跑 Hypium）+ `module.json5` 声明该 Ability；runner 改为 `startAbility(TestAbility)` |
+| runner 取 delegator 时机 | 崩溃：`Cannot read property startAbility of null`（TypeError） | 模块顶层 `getAbilityDelegator()` 早于 delegator 初始化 | 移到 `onRun()` 内取，并对 null 做防御 |
 | 列表状态不刷新 | 热点点完仍显示「可调查」 | ArkUI `ForEach` 同 key 复用组件 | key 并入状态字段 |
 | API 不匹配 | 编译报 `Property 'animateTo' does not exist` | API 12 需走 `UIContext` | 改 `this.getUIContext().animateTo/showAlertDialog` |
 | 恢复丢阶段 | 冷启动退回「验证 55%」 | 流水回放无法还原 `prove:`/`enterJudge`/`finish` 这类非节点事件 | 恢复顺序改为 自动槽 → 快照 → 回放 |
@@ -106,4 +109,4 @@
 ## 5. 结论
 
 - 内容、判定、持久化、恢复、界面链路均已在真实设备环境跑通，**不是纸面推演**。
-- 唯一待补的是 Hypium 用例在 IDE 内的一次执行（12 行代码的测试本体已编译通过）。
+- Hypium 22 个 `it` 已在模拟器上真执行：`Tests run: 22, Failure: 0, Error: 0, Pass: 22`（IDE Run 与 `aa test` 两条路径同源）。
